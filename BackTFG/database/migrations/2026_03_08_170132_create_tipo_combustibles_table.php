@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tipos_combustible', function (Blueprint $table) {
+        Schema::create('tipos_combustibles', function (Blueprint $table) {
             $table->id();
             $table->string('nombre')->unique(); // Ej: Diésel, Gasolina, Eléctrico
             $table->timestamps();
