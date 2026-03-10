@@ -1,0 +1,145 @@
+{
+    "__COMMENT_AUTH__": "---------- SECCIÓN DE AUTENTICACIÓN ----------",
+    "auth": {
+        "already_have_account": "Already have an account?",
+        "login_button": "Log In",
+        "register_button": "Sign Up"
+    },
+    "__COMMENT_LOGIN__": "---------- SECCIÓN DE INICIO SESION ----------",
+    "login": {
+        "title": "Welcome Back",
+        "subtitle": "Access your vehicle maintenance dashboard",
+        "label_email": "Email Address",
+        "placeholder_email": "name@domain.com",
+        "label_password": "Password",
+        "placeholder_password": "Enter your password",
+        "remember_me": "Remember me",
+        "forgot_password": "Forgot Password?",
+        "submit_button": "Log In",
+        "divider": "or continue with",
+        "no_account": "Don't have an account?",
+        "signup_link": "Sign up for CarHistorial"
+    },
+    "__COMMENT_REGISTER__": "---------- SECCIÓN DE REGISTRO ----------",
+    "register": {
+        "title": "Create Account",
+        "subtitle": "Start managing your vehicle today",
+        "label_name": "Full Name",
+        "placeholder_name": "John Doe",
+        "label_email": "Email Address",
+        "placeholder_email": "name@domain.com",
+        "label_password": "Password",
+        "placeholder_password": "Password",
+        "placeholder_repeat_password": "Repeat Password",
+        "terms_text": "I agree to the",
+        "terms_link": "Terms of Service",
+        "submit_button": "Create Account",
+        "social_or": "or sign up with",
+        "benefit1_title": "Real-time Diagnostics",
+        "benefit1_desc": "Advanced scanning and live engine data monitoring.",
+        "benefit2_title": "Secure Expense Tracking",
+        "benefit2_desc": "Save photos of receipts and parts to keep your records up to date.",
+        "benefit3_title": "24/7 Access",
+        "benefit3_desc": "Your information is available whenever and wherever you need it.",
+        "benefit4_title": "Easy Access",
+        "benefit4_desc": "Never worry about losing your physical paperwork again.",
+        "benefit5_title": "Timed Maintenance",
+        "benefit5_desc": "Receive notifications when it's time to replace or service components."
+    },
+    "footer": {
+        "secure": "Secure Payment"
+    },
+    "__COMMENT_LANDING__": "---------- SECCIÓN DE LANDINGPAGE ----------",
+    "landing": {
+        "nav_features": "Features",
+        "nav_benefits": "Benefits",
+        "nav_pricing": "Pricing",
+        "hero_title": "Keep your vehicle always ready",
+        "hero_subtitle": "The all-in-one platform for maintenance tracking, smart alerts, and document management for your fleet or personal vehicle.",
+        "cta_main": "Start for Free now",
+        "cta_demo": "Watch Demo",
+        "social_proof": "+2,000 drivers already trust us",
+        "features_tag": "Capabilities",
+        "features_title": "Everything you need in one place",
+        "features_desc": "We optimize every aspect of your vehicle management so you only have to worry about driving.",
+        "footer_desc": "Smart vehicle maintenance management software for demanding drivers and modern fleets.",
+        "all_rights": "All rights reserved."
+    },
+    "features": {
+        "history_title": "History Tracking",
+        "history_desc": "Complete digital record of all repairs and services performed. Forget the physical logbook.",
+        "alerts_title": "Smart Alerts",
+        "alerts_desc": "Automatic reminders based on mileage or time for oil, tires, and technical inspections.",
+        "docs_title": "Document Management",
+        "docs_desc": "Securely store insurance, licenses, and technical documents. Access from anywhere."
+    },
+    "pricing": {
+        "main_title": "Plans for every driver",
+        "free_name": "Free",
+        "pro_name": "Pro",
+        "ent_name": "Enterprise",
+        "feat_1_veh": "1 Vehicle",
+        "feat_3_veh": "Up to 3 Vehicles",
+        "feat_unlimited": "Unlimited Fleet",
+        "feat_basic": "Basic history recording",
+        "feat_alerts": "Smart Alerts",
+        "feat_docs": "Document Cloud",
+        "feat_api": "API Integration",
+        "btn_choose": "Choose Plan",
+        "btn_contact": "Contact Sales"
+    },
+    "__COMMENT_DASHBOARD__": "---------- DASHBOARD SECTION ----------",
+    "dashboard": {
+        "sidebar": {
+            "sub": "Manage & Track",
+            "role": "Fleet Manager"
+        },
+        "menu": {
+            "dashboard": "Dashboard",
+            "history": "History",
+            "vehicles": "Vehicles",
+            "docs": "Documents",
+            "settings": "Settings"
+        },
+        "header": {
+            "title": "Fleet Overview",
+            "subtitle": "Real-time status of 42 vehicles"
+        },
+        "actions": {
+            "add": "Add Vehicle",
+            "export": "Export"
+        },
+        "filters": {
+            "30days": "30 Days"
+        },
+        "alerts": {
+            "title": "Active Alerts",
+            "critical": "4 Critical",
+            "brake": "Brake Service Overdue",
+            "engine": "Engine Malfunction",
+            "view_all": "View All"
+        },
+        "expenses": {
+            "title": "Monthly Expenses",
+            "trend": "+12% vs last month"
+        },
+        "distribution": {
+            "title": "Vehicle Distribution",
+            "total": "Total",
+            "active": "Active",
+            "service": "In Service"
+        },
+        "activity": {
+            "title": "Recent Activity",
+            "service": "Service Completed",
+            "returned": "Returned to Active"
+        },
+        "stats": {
+            "mileage": "Avg. Mileage",
+            "health": "Health Score",
+            "docs": "Renewal Docs",
+            "drivers": "Active Drivers",
+            "pending": "2 Pending"
+        }
+    }
+}

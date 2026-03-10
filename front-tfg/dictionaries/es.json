@@ -1,0 +1,145 @@
+{
+    "__COMMENT_AUTH__": "---------- SECCIÓN DE AUTENTICACIÓN ----------",
+    "auth": {
+        "already_have_account": "¿Ya tienes una cuenta?",
+        "login_button": "Iniciar Sesión",
+        "register_button": "Registrarse"
+    },
+    "__COMMENT_LOGIN__": "---------- SECCIÓN DE INICIO SESIÓN ----------",
+    "login": {
+        "title": "Bienvenido de nuevo",
+        "subtitle": "Accede al panel de mantenimiento de tu vehículo",
+        "label_email": "Correo electrónico",
+        "placeholder_email": "nombre@dominio.com",
+        "label_password": "Contraseña",
+        "placeholder_password": "Introduce tu contraseña",
+        "remember_me": "Recordarme",
+        "forgot_password": "¿Has olvidado tu contraseña?",
+        "submit_button": "Entrar",
+        "divider": "o continuar con",
+        "no_account": "¿No tienes cuenta?",
+        "signup_link": "Regístrate en CarHistorial"
+    },
+    "__COMMENT_REGISTER__": "---------- SECCIÓN DE REGISTRO ----------",
+    "register": {
+        "title": "Crear Cuenta",
+        "subtitle": "Comienza a gestionar tu vehículo hoy mismo",
+        "label_name": "Nombre completo",
+        "placeholder_name": "Juan Pérez",
+        "label_email": "Correo electrónico",
+        "placeholder_email": "nombre@dominio.com",
+        "label_password": "Contraseña",
+        "placeholder_password": "Contraseña",
+        "placeholder_repeat_password": "Repetir Contraseña",
+        "terms_text": "Acepto los",
+        "terms_link": "Términos de Servicio",
+        "submit_button": "Crear Cuenta",
+        "social_or": "o regístrate con",
+        "benefit1_title": "Diagnósticos en tiempo real",
+        "benefit1_desc": "Escaneo avanzado y monitorización de datos del motor en vivo.",
+        "benefit2_title": "Seguimiento de gastos seguro",
+        "benefit2_desc": "Guarda fotos de tickets y repuestos para mantener tus registros al día.",
+        "benefit3_title": "Acceso 24/7",
+        "benefit3_desc": "Tu información disponible donde y cuando la necesites.",
+        "benefit4_title": "Fácil acceso",
+        "benefit4_desc": "No vuelvas a preocuparte por perder tus papeles físicos.",
+        "benefit5_title": "Mantenimiento a tiempo",
+        "benefit5_desc": "Recibe notificaciones cuando sea hora de cambiar o revisar componentes."
+    },
+    "footer": {
+        "secure": "Pago Seguro"
+    },
+    "__COMMENT_LANDING__": "---------- SECCIÓN DE LANDINGPAGE ----------",
+    "landing": {
+        "nav_features": "Funcionalidades",
+        "nav_benefits": "Beneficios",
+        "nav_pricing": "Precios",
+        "hero_title": "Mantén tu vehículo siempre a punto",
+        "hero_subtitle": "La plataforma integral para el seguimiento de mantenimiento, alertas inteligentes y gestión documental de tu flota o vehículo personal.",
+        "cta_main": "Empieza Gratis ahora",
+        "cta_demo": "Ver Demo",
+        "social_proof": "+2,000 conductores ya confían en nosotros",
+        "features_tag": "Funcionalidades",
+        "features_title": "Todo lo que necesitas en un solo lugar",
+        "features_desc": "Optimizamos cada aspecto de la gestión de tu vehículo para que tú solo te preocupes de conducir.",
+        "footer_desc": "Software de gestión de mantenimiento vehicular inteligente para conductores exigentes y flotas modernas.",
+        "all_rights": "Todos los derechos reservados."
+    },
+    "features": {
+        "history_title": "Seguimiento de Historial",
+        "history_desc": "Registro digital completo de todas las reparaciones y servicios realizados. Olvídate del libro físico.",
+        "alerts_title": "Alertas Inteligentes",
+        "alerts_desc": "Recordatorios automáticos basados en kilometraje o tiempo para aceite, neumáticos e ITV.",
+        "docs_title": "Gestión Documental",
+        "docs_desc": "Almacena de forma segura seguros, carnets y documentos técnicos. Accede desde cualquier lugar."
+    },
+    "pricing": {
+        "main_title": "Planes para todos los conductores",
+        "free_name": "Gratis",
+        "pro_name": "Pro",
+        "ent_name": "Enterprise",
+        "feat_1_veh": "1 Vehículo",
+        "feat_3_veh": "Hasta 3 Vehículos",
+        "feat_unlimited": "Flota Ilimitada",
+        "feat_basic": "Registro básico de historial",
+        "feat_alerts": "Alertas Inteligentes",
+        "feat_docs": "Nube para Documentos",
+        "feat_api": "Integración API",
+        "btn_choose": "Elegir Plan",
+        "btn_contact": "Contactar Ventas"
+    },
+    "__COMMENT_DASHBOARD__": "---------- SECCIÓN DE DASHBOARD ----------",
+    "dashboard": {
+        "sidebar": {
+            "sub": "Gestionar y Rastrear",
+            "role": "Gestor de Flota"
+        },
+        "menu": {
+            "dashboard": "Panel Principal",
+            "history": "Historial",
+            "vehicles": "Vehículos",
+            "docs": "Documentos",
+            "settings": "Ajustes"
+        },
+        "header": {
+            "title": "Vista General",
+            "subtitle": "Estado en tiempo real de 42 vehículos"
+        },
+        "actions": {
+            "add": "Añadir Vehículo",
+            "export": "Exportar"
+        },
+        "filters": {
+            "30days": "30 Días"
+        },
+        "alerts": {
+            "title": "Alertas Activas",
+            "critical": "4 Críticas",
+            "brake": "Servicio de Frenos Vencido",
+            "engine": "Falla de Motor",
+            "view_all": "Ver Todas"
+        },
+        "expenses": {
+            "title": "Gastos Mensuales",
+            "trend": "+12% vs mes anterior"
+        },
+        "distribution": {
+            "title": "Distribución de Flota",
+            "total": "Total",
+            "active": "Activos",
+            "service": "En Servicio"
+        },
+        "activity": {
+            "title": "Actividad Reciente",
+            "service": "Servicio Completado",
+            "returned": "Regresó a Activo"
+        },
+        "stats": {
+            "mileage": "Km Promedio",
+            "health": "Salud Flota",
+            "docs": "Renovaciones",
+            "drivers": "Conductores",
+            "pending": "2 Pendientes"
+        }
+    }
+}
