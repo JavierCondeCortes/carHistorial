@@ -91,8 +91,11 @@
     "__COMMENT_DASHBOARD__": "---------- SECCIÓN DE DASHBOARD ----------",
     "dashboard": {
         "sidebar": {
+            "brand": "CarHistorial",
             "sub": "Gestionar y Rastrear",
-            "role": "Gestor de Flota"
+            "role": "Gestor de Flota",
+            "add_btn": "Añadir Vehículo",
+            "upload_btn": "Subir Documento"
         },
         "menu": {
             "dashboard": "Panel Principal",
@@ -105,26 +108,74 @@
             "title": "Vista General",
             "subtitle": "Estado en tiempo real de 42 vehículos"
         },
+        "vehicle_info": {
+            "model": "Tesla Model 3",
+            "vin_label": "VIN",
+            "vin_value": "5YJ3E1EA6LFXXXXXX"
+        },
         "actions": {
             "add": "Añadir Vehículo",
-            "export": "Exportar"
+            "export": "Exportar",
+            "add_record": "Añadir Registro",
+            "view_mode": "Modo Vista",
+            "sort": "Ordenar"
         },
-        "filters": {
-            "30days": "30 Días"
+        "search": {
+            "placeholder": "Buscar en los documentos..."
+        },
+        "docs_vault": {
+            "title": "Bóveda de Documentos",
+            "subtitle": "Registros digitales para",
+            "new_folder": "Nueva Carpeta",
+            "dropzone_title": "Arrastra y suelta documentos aquí",
+            "dropzone_subtitle": "O haz clic para buscar (PDF, JPG, PNG hasta 10MB)",
+            "categories": {
+                "insurance": "Seguros",
+                "registration": "Registro",
+                "service": "Recibos de Servicio",
+                "warranty": "Garantía"
+            }
+        },
+        "stats": {
+            "expenses": "Gastos Mensuales",
+            "mileage": "Kilometraje",
+            "health": "Salud de Flota",
+            "pending": "Pendiente",
+            "last_30_days": "Últimos 30 días"
+        },
+        "table": {
+            "placeholder": "Buscar en el historial...",
+            "export": "Exportar",
+            "col_id": "ID",
+            "col_service": "Servicio",
+            "col_km": "Kilómetros",
+            "col_cost": "Coste",
+            "name": "Nombre del Documento",
+            "date": "Fecha Añadido",
+            "size": "Tamaño",
+            "actions": "Acciones"
+        },
+        "storage": {
+            "title": "Espacio en la Bóveda",
+            "used": "Espacio usado",
+            "info": "Tus documentos están cifrados y respaldados automáticamente en la nube."
         },
         "alerts": {
             "title": "Alertas Activas",
             "critical": "4 Críticas",
+            "critical_badge": "Críticas",
             "brake": "Servicio de Frenos Vencido",
             "engine": "Falla de Motor",
-            "view_all": "Ver Todas"
-        },
-        "expenses": {
-            "title": "Gastos Mensuales",
-            "trend": "+12% vs mes anterior"
+            "engine_fail": "Falla de Motor",
+            "view_all": "Ver Todas",
+            "compliance_title": "Alertas de Cumplimiento",
+            "ins_expiring": "Seguro por vencer",
+            "ins_desc": "Expira en 12 días. Sube la nueva póliza.",
+            "reg_verified": "Registro Verificado",
+            "reg_desc": "El documento de propiedad es válido."
         },
         "distribution": {
-            "title": "Distribución de Flota",
+            "title": "Distribución de Estado",
             "total": "Total",
             "active": "Activos",
             "service": "En Servicio"
@@ -133,13 +184,6 @@
             "title": "Actividad Reciente",
             "service": "Servicio Completado",
             "returned": "Regresó a Activo"
-        },
-        "stats": {
-            "mileage": "Km Promedio",
-            "health": "Salud Flota",
-            "docs": "Renovaciones",
-            "drivers": "Conductores",
-            "pending": "2 Pendientes"
         }
     }
 }

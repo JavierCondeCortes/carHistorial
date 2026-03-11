@@ -1,12 +1,11 @@
 "use client";
 
-import React from 'react';
+
 import { useRouter } from 'next/navigation';
 
 export default function LandingClient({ dict, lang }) {
     const router = useRouter();
 
-    // Helper para navegar por el objeto dict (ej: 'landing.hero_title')
     const t = (path, fallback) => {
         const keys = path.split('.');
         let result = dict;
@@ -27,7 +26,7 @@ export default function LandingClient({ dict, lang }) {
                         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
                             <span className="material-symbols-outlined">directions_car</span>
                         </div>
-                        <h2 className="text-[#0d121b] dark:text-white text-xl font-bold tracking-tight">AutoMaint</h2>
+                        <h2 className="text-[#0d121b] dark:text-white text-xl font-bold tracking-tight">CarHistorial</h2>
                     </div>
                     <nav className="hidden md:flex flex-1 justify-center gap-10">
                         <a className="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#features">
@@ -43,7 +42,7 @@ export default function LandingClient({ dict, lang }) {
                     <div className="flex gap-3">
                         <button 
                             onClick={() => router.push(`/${lang}/login`)}
-                            className="hidden sm:flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold transition-all hover:bg-slate-200"
+                            className="hidden sm:flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-bold transition-all  hover:bg-slate-200 dark:hover:bg-slate-700"
                         >
                             {t('auth.login_button', 'Login')}
                         </button>

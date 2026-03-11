@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthProvider } from "@/context/AuthContext";
 import { Inter } from "next/font/google"; // Usamos Inter como pedía tu script
 import "./../globals.css";
 
@@ -27,7 +28,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased select-none`}>
+        <AuthProvider>
         {children}
+        </AuthProvider>
       </body>
     </html>
   );

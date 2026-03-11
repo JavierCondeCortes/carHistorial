@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/[lang]/login/page.jsx", "app/[lang]/register/page.jsx"  ],
+, "app/[lang]/login/page.jsx", "app/[lang]/register/page.jsx", "components/ProtectecRoute.jsx", "context/AuthContext.jsx"  ],
   "exclude": ["node_modules"]
 }

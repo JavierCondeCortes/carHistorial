@@ -12,7 +12,7 @@ export default function RegisterClient({ dict, lang }) {
         password: '',
         password_confirmation: '',
     });
-    
+
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState(null);
 
@@ -64,10 +64,12 @@ export default function RegisterClient({ dict, lang }) {
 
             <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 md:px-10 py-3 w-full z-10">
                 <div className="flex items-center gap-3">
-                    <div className="text-primary w-8 h-8 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-3xl">directions_car</span>
+                    <div onClick={() => router.push(`/${lang}/home`)} className='flex items-center cursor-pointer'>
+                        <div className="text-primary w-8 h-8 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-3xl">directions_car</span>
+                        </div>
+                        <h2 className="text-lg font-bold">CarHistorial</h2>
                     </div>
-                    <h2 className="text-lg font-bold">CarHistorial</h2>
                 </div>
                 <div className="flex items-center gap-4">
                     <span className="hidden sm:inline text-sm text-slate-500">{dict.auth.already_have_account}</span>
@@ -129,13 +131,13 @@ export default function RegisterClient({ dict, lang }) {
                                     <label className="text-sm font-medium">{dict.register.label_name}</label>
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
-                                        <input 
+                                        <input
                                             required
                                             value={formData.name}
-                                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`} 
-                                            placeholder={dict.register.placeholder_name} 
-                                            type="text" 
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`}
+                                            placeholder={dict.register.placeholder_name}
+                                            type="text"
                                         />
                                     </div>
                                     {errors?.name && <span className="text-xs text-red-500">{errors.name[0]}</span>}
@@ -145,13 +147,13 @@ export default function RegisterClient({ dict, lang }) {
                                     <label className="text-sm font-medium">{dict.register.label_email}</label>
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
-                                        <input 
+                                        <input
                                             required
                                             value={formData.email}
-                                            onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.email ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`} 
-                                            placeholder={dict.register.placeholder_email} 
-                                            type="email" 
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.email ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`}
+                                            placeholder={dict.register.placeholder_email}
+                                            type="email"
                                         />
                                     </div>
                                     {errors?.email && <span className="text-xs text-red-500">{errors.email[0]}</span>}
@@ -161,13 +163,13 @@ export default function RegisterClient({ dict, lang }) {
                                     <label className="text-sm font-medium">{dict.register.placeholder_password}</label>
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
-                                        <input 
+                                        <input
                                             required
                                             value={formData.password}
-                                            onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.password ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`} 
-                                            placeholder="••••••••" 
-                                            type="password" 
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.password ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`}
+                                            placeholder="••••••••"
+                                            type="password"
                                         />
                                     </div>
                                     {errors?.password && <span className="text-xs text-red-500">{errors.password[0]}</span>}
@@ -177,13 +179,13 @@ export default function RegisterClient({ dict, lang }) {
                                     <label className="text-sm font-medium">{dict.register.placeholder_repeat_password}</label>
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">enhanced_encryption</span>
-                                        <input 
+                                        <input
                                             required
                                             value={formData.password_confirmation}
-                                            onChange={(e) => setFormData({...formData, password_confirmation: e.target.value})}
-                                            className="block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-primary outline-none transition-all" 
-                                            placeholder="••••••••" 
-                                            type="password" 
+                                            onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
+                                            className="block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-primary outline-none transition-all"
+                                            placeholder="••••••••"
+                                            type="password"
                                         />
                                     </div>
                                 </div>
