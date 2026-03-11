@@ -1,0 +1,145 @@
+{
+    "__COMMENT_AUTH__": "---------- 認証セクション ----------",
+    "auth": {
+        "already_have_account": "アカウントをお持ちですか？",
+        "login_button": "ログイン",
+        "register_button": "新規登録"
+    },
+    "__COMMENT_LOGIN__": "---------- ログインセクション ----------",
+    "login": {
+        "title": "おかえりなさい",
+        "subtitle": "車両メンテナンスパネルにアクセスする",
+        "label_email": "メールアドレス",
+        "placeholder_email": "name@domain.com",
+        "label_password": "パスワード",
+        "placeholder_password": "パスワードを入力してください",
+        "remember_me": "ログイン状態を保持する",
+        "forgot_password": "パスワードをお忘れですか？",
+        "submit_button": "ログイン",
+        "divider": "または次で続行",
+        "no_account": "アカウントをお持ちでないですか？",
+        "signup_link": "CarHistorialに登録する"
+    },
+    "__COMMENT_REGISTER__": "---------- 登録セクション ----------",
+    "register": {
+        "title": "アカウント作成",
+        "subtitle": "今日から車両管理を始めましょう",
+        "label_name": "フルネーム",
+        "placeholder_name": "山田 太郎",
+        "label_email": "メールアドレス",
+        "placeholder_email": "name@domain.com",
+        "label_password": "パスワード",
+        "placeholder_password": "パスワード",
+        "placeholder_repeat_password": "パスワードを再入力",
+        "terms_text": "に同意します",
+        "terms_link": "利用規約",
+        "submit_button": "アカウントを作成",
+        "social_or": "または次で登録",
+        "benefit1_title": "リアルタイム診断",
+        "benefit1_desc": "高度なスキャンとエンジンデータのライブモニタリング。",
+        "benefit2_title": "安全な支出追跡",
+        "benefit2_desc": "領収書やパーツの写真を保存して、記録を最新に保ちます。",
+        "benefit3_title": "24時間365日のアクセス",
+        "benefit3_desc": "必要な時にいつでもどこでも情報にアクセス可能。",
+        "benefit4_title": "簡単アクセス",
+        "benefit4_desc": "紙の書類を紛失する心配はもうありません。",
+        "benefit5_title": "タイムリーなメンテナンス",
+        "benefit5_desc": "部品の交換や点検の時期に通知を受け取ります。"
+    },
+    "footer": {
+        "secure": "安全な決済"
+    },
+    "__COMMENT_LANDING__": "---------- ランディングページ ----------",
+    "landing": {
+        "nav_features": "機能",
+        "nav_benefits": "メリット",
+        "nav_pricing": "料金プラン",
+        "hero_title": "愛車を常に最高の状態に",
+        "hero_subtitle": "メンテナンス追跡、インテリジェントアラート、車両管理ドキュメントのための総合プラットフォーム。",
+        "cta_main": "今すぐ無料で始める",
+        "cta_demo": "デモを見る",
+        "social_proof": "2,000人以上のドライバーが信頼しています",
+        "features_tag": "機能",
+        "features_title": "必要なものすべてを1か所に",
+        "features_desc": "車両管理のあらゆる側面を最適化し、運転に集中できる環境を提供します。",
+        "footer_desc": "こだわりのドライバーと現代のフリートのための、インテリジェントな車両メンテナンス管理ソフトウェア。",
+        "all_rights": "All rights reserved."
+    },
+    "features": {
+        "history_title": "履歴の追跡",
+        "history_desc": "すべての修理とサービスの完全なデジタル記録。紙の整備手帳は不要です。",
+        "alerts_title": "スマートアラート",
+        "alerts_desc": "走行距離や期間に基づいたオイル、タイヤ、車検の自動リマインダー。",
+        "docs_title": "ドキュメント管理",
+        "docs_desc": "保険証券、免許証、技術書類を安全に保管。どこからでもアクセス可能です。"
+    },
+    "pricing": {
+        "main_title": "すべてのドライバーのためのプラン",
+        "free_name": "無料",
+        "pro_name": "プロ",
+        "ent_name": "エンタープライズ",
+        "feat_1_veh": "1台の車両",
+        "feat_3_veh": "最大3台の車両",
+        "feat_unlimited": "無制限のフリート",
+        "feat_basic": "基本的な履歴記録",
+        "feat_alerts": "スマートアラート",
+        "feat_docs": "ドキュメント用クラウド",
+        "feat_api": "API連携",
+        "btn_choose": "プランを選択",
+        "btn_contact": "営業担当に問い合わせ"
+    },
+    "__COMMENT_DASHBOARD__": "---------- ダッシュボードセクション ----------",
+    "dashboard": {
+        "sidebar": {
+            "sub": "管理と追跡",
+            "role": "フリートマネージャー"
+        },
+        "menu": {
+            "dashboard": "ダッシュボード",
+            "history": "履歴",
+            "vehicles": "車両一覧",
+            "docs": "ドキュメント",
+            "settings": "設定"
+        },
+        "header": {
+            "title": "概要",
+            "subtitle": "42台の車両のリアルタイムステータス"
+        },
+        "actions": {
+            "add": "車両を追加",
+            "export": "エクスポート"
+        },
+        "filters": {
+            "30days": "30日間"
+        },
+        "alerts": {
+            "title": "アクティブなアラート",
+            "critical": "4件の緊急",
+            "brake": "ブレーキサービスの期限切れ",
+            "engine": "エンジン故障",
+            "view_all": "すべて見る"
+        },
+        "expenses": {
+            "title": "月間支出",
+            "trend": "前月比 +12%"
+        },
+        "distribution": {
+            "title": "フリート分布",
+            "total": "合計",
+            "active": "稼働中",
+            "service": "整備中"
+        },
+        "activity": {
+            "title": "最近のアクティビティ",
+            "service": "整備完了",
+            "returned": "稼働に戻りました"
+        },
+        "stats": {
+            "mileage": "平均走行距離",
+            "health": "フリートの状態",
+            "docs": "更新書類",
+            "drivers": "ドライバー数",
+            "pending": "2件の保留"
+        }
+    }
+}

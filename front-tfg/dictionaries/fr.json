@@ -1,0 +1,145 @@
+{
+    "__COMMENT_AUTH__": "---------- SECTION D'AUTHENTIFICATION ----------",
+    "auth": {
+        "already_have_account": "Vous avez déjà un compte ?",
+        "login_button": "Se connecter",
+        "register_button": "S'inscrire"
+    },
+    "__COMMENT_LOGIN__": "---------- SECTION DE CONNEXION ----------",
+    "login": {
+        "title": "Bon retour parmi nous",
+        "subtitle": "Accédez au panneau d'entretien de votre véhicule",
+        "label_email": "Adresse e-mail",
+        "placeholder_email": "nom@domaine.com",
+        "label_password": "Mot de passe",
+        "placeholder_password": "Saisissez votre mot de passe",
+        "remember_me": "Se souvenir de moi",
+        "forgot_password": "Mot de passe oublié ?",
+        "submit_button": "Connexion",
+        "divider": "ou continuer avec",
+        "no_account": "Vous n'avez pas de compte ?",
+        "signup_link": "Inscrivez-vous sur CarHistorial"
+    },
+    "__COMMENT_REGISTER__": "---------- SECTION D'INSCRIPTION ----------",
+    "register": {
+        "title": "Créer un compte",
+        "subtitle": "Commencez à gérer votre véhicule dès aujourd'hui",
+        "label_name": "Nom complet",
+        "placeholder_name": "Jean Dupont",
+        "label_email": "Adresse e-mail",
+        "placeholder_email": "nom@domaine.com",
+        "label_password": "Mot de passe",
+        "placeholder_password": "Mot de passe",
+        "placeholder_repeat_password": "Répéter le mot de passe",
+        "terms_text": "J'accepte les",
+        "terms_link": "Conditions d'utilisation",
+        "submit_button": "Créer un compte",
+        "social_or": "ou inscrivez-vous avec",
+        "benefit1_title": "Diagnostics en temps réel",
+        "benefit1_desc": "Scan avancé et surveillance des données moteur en direct.",
+        "benefit2_title": "Suivi sécurisé des dépenses",
+        "benefit2_desc": "Enregistrez les photos de vos tickets et pièces pour tenir vos registres à jour.",
+        "benefit3_title": "Accès 24h/24 et 7j/7",
+        "benefit3_desc": "Vos informations sont disponibles où et quand vous en avez besoin.",
+        "benefit4_title": "Accès facile",
+        "benefit4_desc": "Ne vous souciez plus de perdre vos documents papier.",
+        "benefit5_title": "Entretien à temps",
+        "benefit5_desc": "Recevez des notifications lorsqu'il est temps de changer ou réviser des composants."
+    },
+    "footer": {
+        "secure": "Paiement Sécurisé"
+    },
+    "__COMMENT_LANDING__": "---------- SECTION LANDING PAGE ----------",
+    "landing": {
+        "nav_features": "Fonctionnalités",
+        "nav_benefits": "Avantages",
+        "nav_pricing": "Tarifs",
+        "hero_title": "Gardez votre véhicule toujours opérationnel",
+        "hero_subtitle": "La plateforme intégrale pour le suivi de l'entretien, les alertes intelligentes et la gestion documentaire de votre flotte ou véhicule personnel.",
+        "cta_main": "Commencer gratuitement",
+        "cta_demo": "Voir la Démo",
+        "social_proof": "Plus de 2 000 conducteurs nous font déjà confiance",
+        "features_tag": "Fonctionnalités",
+        "features_title": "Tout ce dont vous avez besoin au même endroit",
+        "features_desc": "Nous optimisons chaque aspect de la gestion de votre véhicule pour que vous n'ayez qu'à vous soucier de conduire.",
+        "footer_desc": "Logiciel de gestion intelligente de l'entretien des véhicules pour les conducteurs exigeants et les flottes modernes.",
+        "all_rights": "Tous droits réservés."
+    },
+    "features": {
+        "history_title": "Suivi de l'historique",
+        "history_desc": "Registre numérique complet de toutes les réparations et services effectués. Oubliez le carnet physique.",
+        "alerts_title": "Alertes Intelligentes",
+        "alerts_desc": "Rappels automatiques basés sur le kilométrage ou le temps pour l'huile, les pneus et le contrôle technique.",
+        "docs_title": "Gestion Documentaire",
+        "docs_desc": "Stockez en toute sécurité vos assurances, permis et documents techniques. Accédez-y de partout."
+    },
+    "pricing": {
+        "main_title": "Des plans pour tous les conducteurs",
+        "free_name": "Gratuit",
+        "pro_name": "Pro",
+        "ent_name": "Entreprise",
+        "feat_1_veh": "1 Véhicule",
+        "feat_3_veh": "Jusqu'à 3 véhicules",
+        "feat_unlimited": "Flotte illimitée",
+        "feat_basic": "Registre d'historique basique",
+        "feat_alerts": "Alertes Intelligentes",
+        "feat_docs": "Cloud pour documents",
+        "feat_api": "Intégration API",
+        "btn_choose": "Choisir ce plan",
+        "btn_contact": "Contacter les ventes"
+    },
+    "__COMMENT_DASHBOARD__": "---------- SECTION TABLEAU DE BORD ----------",
+    "dashboard": {
+        "sidebar": {
+            "sub": "Gérer et Suivre",
+            "role": "Gestionnaire de flotte"
+        },
+        "menu": {
+            "dashboard": "Tableau de bord",
+            "history": "Historique",
+            "vehicles": "Véhicules",
+            "docs": "Documents",
+            "settings": "Paramètres"
+        },
+        "header": {
+            "title": "Vue d'ensemble",
+            "subtitle": "État en temps réel de 42 véhicules"
+        },
+        "actions": {
+            "add": "Ajouter un véhicule",
+            "export": "Exporter"
+        },
+        "filters": {
+            "30days": "30 jours"
+        },
+        "alerts": {
+            "title": "Alertes Actives",
+            "critical": "4 Critiques",
+            "brake": "Service de freins dépassé",
+            "engine": "Panne moteur",
+            "view_all": "Voir tout"
+        },
+        "expenses": {
+            "title": "Dépenses mensuelles",
+            "trend": "+12% par rapport au mois dernier"
+        },
+        "distribution": {
+            "title": "Distribution de la flotte",
+            "total": "Total",
+            "active": "Actifs",
+            "service": "En service"
+        },
+        "activity": {
+            "title": "Activité récente",
+            "service": "Entretien terminé",
+            "returned": "Remis en service"
+        },
+        "stats": {
+            "mileage": "Km moyen",
+            "health": "Santé de la flotte",
+            "docs": "Renouvellements",
+            "drivers": "Conducteurs",
+            "pending": "2 en attente"
+        }
+    }
+}
