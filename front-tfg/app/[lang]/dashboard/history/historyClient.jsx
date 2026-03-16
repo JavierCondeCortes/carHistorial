@@ -2,25 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-
-/** * --- SUB-COMPONENTES AUXILIARES ---
- */
-
-const NavItem = ({ icon, label, active = false, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-            active
-                ? 'bg-primary/10 text-primary font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
-        }`}
-    >
-        <span className={`material-symbols-outlined ${active ? 'material-symbols-fill' : ''}`}>
-            {icon}
-        </span>
-        <span className="text-sm">{label}</span>
-    </button>
-);
+import { useTranslation } from '@/lib/useTranslation';
+import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
+import MobileMenuOverlay from '@/components/MobileMenuOverlay';
+import NavItem from '@/components/NavItem';
 
 const StatCard = ({ label, value, trend, subtitle, icon, color }) => (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">

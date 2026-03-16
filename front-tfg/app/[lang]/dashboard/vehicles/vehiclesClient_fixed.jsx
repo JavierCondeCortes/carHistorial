@@ -6,105 +6,39 @@ import { useTranslation } from '@/lib/useTranslation';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
 import MobileMenuOverlay from '@/components/MobileMenuOverlay';
-import NavItem from '@/components/NavItem';
 
 export default function VehiclesClient({ dict }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
-    
-    // Obtenemos el idioma actual de los parámetros de la URL (ej: /es/dashboard -> es)
     const lang = params?.lang || 'en';
+    const t = useTranslation(dict);
 
-    // Función de traducción con soporte para objetos anidados
-    const t = (path, fallback) => {
-        const keys = path.split('.');
-        let result = dict;
-        for (const key of keys) {
-            if (!result || result[key] === undefined) return fallback;
-            result = result[key];
-        }
-        return result;
-    };
+    const userProfile = (
+        <div className="flex items-center gap-3 px-2">
+            <div className="bg-slate-200 dark:bg-slate-700 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=5')" }}></div>
+            <div className="flex flex-col">
+                <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
+                <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+            <Sidebar 
+                lang={lang}
+                router={router}
+                activePage="vehicles"
+                t={t}
+                userProfile={userProfile}
+            />
 
-            {/* --- SIDEBAR (Escritorio) --- */}
-            <aside className="hidden lg:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between p-4 shrink-0">
-                <div className="flex flex-col gap-6">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="bg-primary size-10 rounded-lg flex items-center justify-center text-white">
-                            <span className="material-symbols-outlined">directions_car</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-slate-900 dark:text-white text-base font-bold leading-none">CarHistorial</h1>
-                            <p className="text-slate-500 text-xs font-normal">{t('dashboard.sidebar.sub', 'Manage & Track')}</p>
-                        </div>
-                    </div>
-
-                    <nav className="flex flex-col gap-1">
-                        <NavItem 
-                            onClick={() => router.push(`/${lang}/dashboard`)} 
-                            icon="dashboard" 
-                            label={t('dashboard.menu.dashboard', 'Dashboard')} 
-                        />
-                        <NavItem 
-                            onClick={() => router.push(`/${lang}/dashboard/history`)}
-                            icon="history" 
-                            label={t('dashboard.menu.history', 'Service History')} 
-                        />
-                        <NavItem 
-                        onClick={() => router.push(`/${lang}/dashboard/vehicles`)}
-                            icon="garage" 
-                            label={t('dashboard.menu.vehicles', 'Vehicles')} 
-                            active
-                        />
-                        <NavItem
-                        onClick={() => router.push(`/${lang}/dashboard/documents`)}
-                            icon="description" 
-                            label={t('dashboard.menu.docs', 'Documents')}
-                        />
-                        <NavItem 
-                            icon="settings" 
-                            label={t('dashboard.menu.settings', 'Settings')} 
-                        />
-                    </nav>
-                </div>
-
-                <div className="flex flex-col gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="bg-slate-200 dark:bg-slate-700 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=5')" }}></div>
-                        <div className="flex flex-col">
-                            <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
-                            <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
-                        </div>
-                    </div>
-                    <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-sm">add</span> 
-                        {t('dashboard.actions.add', 'Add Vehicle')}
-                    </button>
-                </div>
-            </aside>
-
-            {/* --- CONTENIDO PRINCIPAL --- */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-                {/* HEADER MÓVIL */}
-                <header className="flex lg:hidden items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-primary size-8 rounded flex items-center justify-center text-white">
-                            <span className="material-symbols-outlined text-xl">directions_car</span>
-                        </div>
-                    <span className="font-black text-lg tracking-tight">CarHistorial</span>
-                    </div>
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="text-slate-600 dark:text-slate-400 p-1 active:bg-slate-100 dark:active:bg-slate-800 rounded-lg transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-2xl">{isMenuOpen ? 'close' : 'menu'}</span>
-                    </button>
-                </header>
+                <MobileHeader 
+                    onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
+                    isMenuOpen={isMenuOpen}
+                />
 
                 <main className="flex-1 overflow-y-auto scroll-smooth">
                     <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -188,26 +122,14 @@ export default function VehiclesClient({ dict }) {
                 </main>
             </div>
 
-            {/* --- MENÚ LATERAL MÓVIL --- */}
-            {isMenuOpen && (
-                <div className="fixed inset-0 z-[100] lg:hidden">
-                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 p-6 shadow-xl animate-in slide-in-from-right duration-300">
-                        <div className="flex flex-col gap-8">
-                            <button onClick={() => setIsMenuOpen(false)} className="self-end p-2"><span className="material-symbols-outlined">close</span></button>
-                            <nav className="flex flex-col gap-3">
-                                <NavItem 
-                                    onClick={() => { router.push(`/${lang}/dashboard`); setIsMenuOpen(false); }} 
-                                    icon="dashboard" 
-                                    label={t('dashboard.menu.dashboard', 'Dashboard')} 
-                                />
-                                <NavItem icon="garage" label={t('dashboard.menu.vehicles', 'Vehicles')} active />
-                                <NavItem icon="settings" label={t('dashboard.menu.settings', 'Settings')} />
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileMenuOverlay 
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                lang={lang}
+                router={router}
+                activePage="vehicles"
+                t={t}
+            />
         </div>
     );
 }

@@ -133,6 +133,7 @@ export default function VehicleDocumentsVault({ dict }) {
                     </div>
                 </main>
             </div>
+
             <MobileMenuOverlay 
                 isOpen={isMenuOpen}
                 onClose={() => setIsMenuOpen(false)}
@@ -146,8 +147,6 @@ export default function VehicleDocumentsVault({ dict }) {
 }
 
 /** --- SUB-COMPONENTES AUXILIARES --- **/
-
-// BottomNavItem removed - no longer used
 
 const DocumentRow = ({ name, date, size, type }) => (
     <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
@@ -184,8 +183,6 @@ const CategoryCard = ({ icon, title, count, active = false, color = 'primary' })
         <h4 className="text-slate-900 dark:text-white font-bold text-sm">{title}</h4>
     </div>
 );
-
-// UserProfile moved inline to component
 
 const StorageWidget = ({ t }) => (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">

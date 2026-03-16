@@ -87,6 +87,8 @@
 > - km
 > - subida_archivos (ticket, factura, imagen del cambio...)
 
+
+
 > formulario de liquidos:
 > - aceite de motor (15.000 o 1año)
 > - frenos (1año)
@@ -95,6 +97,24 @@
 > - direccion (1año)
 > - limpia parabrisas
 
+### Funcionalidad adicional
+
+- `*` Exportar la informacion de los coche
+
+### funcionalidad a futuro
+
+> Equivalente a mantenimiento pero personalizado:
+> - nombre
+> - descripcion
+> - fecha_mantenimiento
+> - productos_comprados (opcional)
+> - precio
+> - km
+> - cada_cuantos_kilometros
+> - cada_cuanto_tiempo
+> - subida_archivos (ticket, factura, imagen del cambio...)
+
 ### Conclusion
 
 - Nos centraremos en lo esencial para el TFG, teniendo en cuenta que me gustaria expandirlo para darle un uso profesional.
+

@@ -1,95 +1,42 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Importación necesaria
+import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/useTranslation';
+import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
+import MobileMenuOverlay from '@/components/MobileMenuOverlay';
 
 export default function DashboardClient({ dict, lang }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const router = useRouter(); // Inicialización del router
+    const router = useRouter();
+    const t = useTranslation(dict);
 
-    // Helper para traducciones
-    const t = (path, fallback) => {
-        const keys = path.split('.');
-        let result = dict;
-        for (const key of keys) {
-            if (!result || result[key] === undefined) return fallback;
-            result = result[key];
-        }
-        return result;
-    };
+    const userProfile = (
+        <div className="flex items-center gap-3 px-2">
+            <div className="bg-slate-200 dark:bg-slate-700 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=5')" }}></div>
+            <div className="flex flex-col">
+                <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
+                <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+            <Sidebar 
+                lang={lang}
+                router={router}
+                activePage="dashboard"
+                t={t}
+                userProfile={userProfile}
+            />
 
-            {/* --- SIDEBAR (PC) --- */}
-            <aside className="hidden lg:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between p-4 shrink-0">
-                <div className="flex flex-col gap-6">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="bg-primary size-10 rounded-lg flex items-center justify-center text-white">
-                            <span className="material-symbols-outlined">directions_car</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-slate-900 dark:text-white text-base font-bold leading-none">CarHistorial</h1>
-                            <p className="text-slate-500 text-xs font-normal">{t('dashboard.sidebar.sub', 'Manage & Track')}</p>
-                        </div>
-                    </div>
-                    <nav className="flex flex-col gap-1">
-                        <NavItem 
-                            onClick={() => router.push(`/${lang}/dashboard`)} 
-                            icon="dashboard" 
-                            label={t('dashboard.menu.dashboard', 'Dashboard')}
-                            active
-                        />
-                        <NavItem 
-                            onClick={() => router.push(`/${lang}/dashboard/history`)}
-                            icon="history" 
-                            label={t('dashboard.menu.history', 'Service History')} 
-                        />
-                        <NavItem 
-                        onClick={() => router.push(`/${lang}/dashboard/vehicles`)}
-                            icon="garage" 
-                            label={t('dashboard.menu.vehicles', 'Vehicles')} 
-                        />
-                        <NavItem
-                        onClick={() => router.push(`/${lang}/dashboard/documents`)}
-                            icon="description" 
-                            label={t('dashboard.menu.docs', 'Documents')}
-                        />
-                        <NavItem 
-                            icon="settings" 
-                            label={t('dashboard.menu.settings', 'Settings')} 
-                        />
-                    </nav>
-                </div>
-                <div className="flex flex-col gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="bg-slate-200 dark:bg-slate-700 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=5')" }}></div>
-                        <div className="flex flex-col">
-                            <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
-                            <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
-                        </div>
-                    </div>
-                    <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-sm">add</span> {t('dashboard.actions.add', 'Add Vehicle')}
-                    </button>
-                </div>
-            </aside>
-
-            {/* --- CONTENIDO PRINCIPAL --- */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-                {/* HEADER (MÓVIL) */}
-                <header className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between sticky top-0 z-50">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-primary size-8 rounded-lg flex items-center justify-center text-white">
-                            <span className="material-symbols-outlined text-lg">directions_car</span>
-                        </div>
-                        <h1 className="text-slate-900 dark:text-white text-base font-bold">FleetPro</h1>
-                    </div>
-                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-600 dark:text-slate-400">
-                        <span className="material-symbols-outlined">menu</span>
-                    </button>
-                </header>
+                <MobileHeader 
+                    onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    isMenuOpen={isMobileMenuOpen}
+                />
 
                 <main className="flex-1 overflow-y-auto scroll-smooth p-4 lg:p-8">
                     <div className="max-w-6xl mx-auto">
@@ -163,29 +110,21 @@ export default function DashboardClient({ dict, lang }) {
                     </div>
                 </main>
             </div>
+            <MobileMenuOverlay 
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                lang={lang}
+                router={router}
+                activePage="dashboard"
+                t={t}
+            />
         </div>
     );
 }
 
-// --- SUB-COMPONENTES ACTUALIZADOS ---
+// --- SUB-COMPONENTES AUXILIARES ---
+// AlertItem, MiniStat, StatRow, ActivityItem, ChartPlaceholder, DonutChart permanecen igual
 
-function NavItem({ icon, label, active = false, onClick }) {
-    return (
-        <button 
-            onClick={onClick}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-                active 
-                ? 'bg-primary/10 text-primary font-bold' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-        >
-            <span className={`material-symbols-outlined ${active ? 'material-symbols-fill' : ''}`}>{icon}</span>
-            <span className="text-sm font-medium">{label}</span>
-        </button>
-    );
-}
-
-// El resto de componentes (AlertItem, MiniStat, etc.) permanecen iguales que en tu código original
 function AlertItem({ type, title, subtitle }) {
     const colors = type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100' : 'bg-red-50 dark:bg-red-900/10 border-red-100';
     const iconColor = type === 'warning' ? 'text-amber-500' : 'text-red-500';
