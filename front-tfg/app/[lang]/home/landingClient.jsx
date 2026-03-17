@@ -32,12 +32,12 @@ export default function LandingClient({ dict, lang }) {
                         <a className="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#features">
                             {t('landing.nav_features', 'Features')}
                         </a>
-                        <a className="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#benefits">
+                        {/* <a className="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#benefits">
                             {t('landing.nav_benefits', 'Benefits')}
-                        </a>
-                        <a className="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#pricing">
+                        </a> */}
+                        {/* <a className="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#pricing">
                             {t('landing.nav_pricing', 'Pricing')}
-                        </a>
+                        </a> */}
                     </nav>
                     <div className="flex gap-3">
                         <button 
@@ -112,7 +112,7 @@ export default function LandingClient({ dict, lang }) {
                 </section>
 
                 {/* Pricing Section */}
-                <section className="bg-slate-100 dark:bg-slate-900 px-6 lg:px-40 py-24" id="pricing">
+                {/* <section className="bg-slate-100 dark:bg-slate-900 px-6 lg:px-40 py-24" id="pricing">
                     <div className="max-w-[1280px] mx-auto text-center">
                         <h2 className="text-4xl font-black dark:text-white mb-12">{t('pricing.main_title', 'Planes')}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -121,7 +121,7 @@ export default function LandingClient({ dict, lang }) {
                             <PricingCard title={t('pricing.ent_name', 'Enterprise')} price="49" features={[t('pricing.feat_unlimited'), t('pricing.feat_api')]} buttonText={t('pricing.btn_contact')} />
                         </div>
                     </div>
-                </section>
+                </section> */}
             </main>
 
             {/* Footer */}

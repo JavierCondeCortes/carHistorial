@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import AddVehicleModal from '@/components/AddVehicleModal';
 import { useRouter, useParams } from 'next/navigation';
-import { useTranslation } from '@/lib/useTranslation';
-import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
-import MobileMenuOverlay from '@/components/MobileMenuOverlay';
 import NavItem from '@/components/NavItem';
 
 export default function VehiclesClient({ dict }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
     
@@ -25,6 +23,15 @@ export default function VehiclesClient({ dict }) {
             result = result[key];
         }
         return result;
+    };
+
+    // Handler para mostrar el modal
+    const handleAddVehicleClick = () => setIsModalOpen(true);
+    const handleCloseModal = () => setIsModalOpen(false);
+    const handleSubmitModal = (e) => {
+        e.preventDefault();
+        // Aquí iría la lógica para enviar el nuevo vehículo
+        handleCloseModal();
     };
 
     return (
@@ -80,8 +87,8 @@ export default function VehiclesClient({ dict }) {
                             <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
                         </div>
                     </div>
-                    <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-sm">add</span> 
+                    <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2" onClick={handleAddVehicleClick}>
+                        <span className="material-symbols-outlined text-sm">add</span>
                         {t('dashboard.actions.add', 'Add Vehicle')}
                     </button>
                 </div>
@@ -124,7 +131,7 @@ export default function VehiclesClient({ dict }) {
                                     <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">{t('vehicles.total_label', 'Total:')}</span>
                                     <span className="text-xs md:text-sm font-black text-primary">24</span>
                                 </div>
-                                <button className="bg-primary hover:bg-primary/90 text-white font-bold py-2 md:py-2.5 px-4 md:px-6 rounded-lg text-xs md:text-sm transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                                <button className="bg-primary hover:bg-primary/90 text-white font-bold py-2 md:py-2.5 px-4 md:px-6 rounded-lg text-xs md:text-sm transition-all shadow-lg shadow-primary/20 flex items-center gap-2" onClick={handleAddVehicleClick}>
                                     <span className="material-symbols-outlined text-sm">add</span>
                                     {t('vehicles.add_btn', 'Add New')}
                                 </button>
@@ -179,7 +186,7 @@ export default function VehiclesClient({ dict }) {
                             </div>
 
                             {/* Botón Añadir Nuevo */}
-                            <button className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-primary/5 transition-all text-slate-400 hover:text-primary min-h-[250px]">
+                            <button className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-primary/5 transition-all text-slate-400 hover:text-primary min-h-[250px]" onClick={handleAddVehicleClick}>
                                 <span className="material-symbols-outlined text-4xl">add_circle</span>
                                 <p className="font-bold">{t('vehicles.add_btn', 'Add New Vehicle')}</p>
                             </button>
@@ -187,6 +194,9 @@ export default function VehiclesClient({ dict }) {
                     </div>
                 </main>
             </div>
+
+            {/* --- MODAL AGREGAR VEHÍCULO --- */}
+            <AddVehicleModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmitModal} />
 
             {/* --- MENÚ LATERAL MÓVIL --- */}
             {isMenuOpen && (

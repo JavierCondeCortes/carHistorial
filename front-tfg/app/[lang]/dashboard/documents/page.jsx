@@ -1,5 +1,5 @@
 import { getDictionary } from '@/lib/get-dictionary';
-import VehicleDocumentsVault from './documentsClient';
+import VehicleDocumentsVault from './documentsClient_fixed';
 
 export default async function Page({ params }) {
     const { lang } = await params;
