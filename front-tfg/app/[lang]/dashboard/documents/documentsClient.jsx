@@ -126,7 +126,7 @@ export default function VehicleDocumentsVault({ dict }) {
                         </div>
 
                         {/* Widgets de Inferiores (PC) */}
-                        <div className="hidden lg:grid grid-cols-2 gap-6 pb-8">
+                        <div className="hidden lg:grid grid-cols-2 pb-8">
                             <StorageWidget t={t} />
                             <AlertsWidget t={t} />
                         </div>
