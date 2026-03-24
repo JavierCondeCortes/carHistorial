@@ -14,13 +14,14 @@
 - La idea proviene de los problemas que tenemos en casa a la hora del mantenimiento de los vehículos, como anteriormente expliqué. Al tener 4 coches, de diferentes años y diferentes tipos de combustible, usan productos que si se usan de mala manera pueden deteriorar el motor a medida del tiempo, pudiendo crear pasta en los líquidos e inhabilitar los radiadores y el aceite, llegando a sobrecalentamientos. Eso es solo un ejemplo de lo que puede suceder si no se lleva un mantenimiento con su respectivo material.
 
 ## Objetivos
+
 - Administrar los vehiculos.
 - - poder hacer CRUD de los coches.
 - - - Marca, Modelo, Tipo combustible, Pegatina, plazas, color, km_recorridos, fecha_ultima_itv, matricula, nBastidor...
-- - - [Tipo de Aceite, Tipo liquido Frenos, Tipo liquido Caja cambios, Liquido anticongelante, Liquido limpiabrisas] estos con fecha o kilometros antes del cambio
+- - - [Tipo de Aceite, Tipo liquido Frenos, Tipo liquido Caja cambios, Liquido anticongelante, Liquido limpiabrisas] estos con fecha o kilometros antes del cambio.
 - - poder hacer CRUD de los documentos del coche.
-- - - vehiculo_asociado, numbre_doc, ruta_encriptada
-- - Calcular el gasto de combustible medio mediante el ingreso de los kilometros, el costo del comstible y el precio del combustible
+- - - vehiculo_asociado, numbre_doc, ruta_encriptada.
+- - Calcular el gasto de combustible medio mediante el ingreso de los kilometros, el costo del comstible y el precio del combustible.
 
 ## ¿Cómo se va a estructurar?
 
