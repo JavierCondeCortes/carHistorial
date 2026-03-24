@@ -8,6 +8,10 @@ use App\Models\Motorizacion;
 use Illuminate\Http\Request;
 
 class AdminDataController extends Controller
+    // Obtener todas las marcas
+    public function indexMarcas() {
+        return response()->json(Marca::all());
+    }
 {
     // Crear nueva Marca
     public function storeMarca(Request $request) {

@@ -1,3 +1,6 @@
+// Ruta pública para obtener todas las marcas (solo nombres)
+use App\Http\Controllers\MarcaController;
+Route::get('/marcas', [MarcaController::class, 'index']);
 <?php
 
 use App\Http\Controllers\AuthController;
@@ -12,9 +15,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user/{id}', [AuthController::class, 'destroy']);
     
     // Rutas para el CRUD de Vehículos
-    Route::apiResource('vehiculos', VehiculoController::class);
+    Route::apiResource('/vehiculos', VehiculoController::class);
 
-    // Rutas para expandir el catálogo (Create)
+    // Rutas para expandir el catálogo (Create y List)
+    Route::get('/admin/marcas', [AdminDataController::class, 'indexMarcas']);
     Route::post('/admin/marcas', [AdminDataController::class, 'storeMarca']);
     Route::post('/admin/modelos', [AdminDataController::class, 'storeModelo']);
     Route::post('/admin/motorizaciones', [AdminDataController::class, 'storeMotorizacion']);

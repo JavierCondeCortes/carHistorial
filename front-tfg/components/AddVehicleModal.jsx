@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AlertItem from './AlertItem';
 
-const AddVehicleModal = ({ isOpen, onClose, onSubmit, marcas = [], modelos = [], motorizaciones = [], pegatinas = [], errors = {} }) => {
+const AddVehicleModal = ({ isOpen, onClose, onSubmit, modelos = [], motorizaciones = [], pegatinas = [], errors = {} }) => {
+    const [marcas, setMarcas] = useState([]);
     const [marcaInput, setMarcaInput] = useState('');
     const [marcaId, setMarcaId] = useState('');
+    const [showMarcaList, setShowMarcaList] = useState(false);
+        // Cargar marcas desde la API al abrir el modal
+        useEffect(() => {
+            if (isOpen) {
+                fetch('http://localhost:8000/api/marcas')
+                    .then(res => res.json())
+                    .then(data => setMarcas(data))
+                    .catch(() => setMarcas([]));
+            }
+        }, [isOpen]);
     const [modeloInput, setModeloInput] = useState('');
     const [modeloId, setModeloId] = useState('');
     const [motorizacionId, setMotorizacionId] = useState('');
@@ -94,25 +105,35 @@ const AddVehicleModal = ({ isOpen, onClose, onSubmit, marcas = [], modelos = [],
                                 autoComplete="off"
                                 placeholder="Escribe o selecciona marca"
                                 value={marcaInput}
+                                onFocus={() => setShowMarcaList(true)}
+                                onBlur={() => setTimeout(() => setShowMarcaList(false), 150)}
                                 onChange={e => {
                                     setMarcaInput(e.target.value);
                                     setMarcaId('');
+                                    setShowMarcaList(true);
                                 }}
                             />
-                            {marcaInput && (
+                            {(showMarcaList || marcaInput) && (
                                 <div className="absolute top-16 left-0 w-full bg-white dark:bg-slate-900 border border-primary/30 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
-                                    {marcas.filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase())).map(m => (
-                                        <div
-                                            key={m.id}
-                                            className="px-4 py-2 cursor-pointer hover:bg-primary/10"
-                                            onClick={() => {
-                                                setMarcaId(m.id);
-                                                setMarcaInput(m.nombre);
-                                            }}
-                                        >
-                                            {m.nombre}
-                                        </div>
-                                    ))}
+                                    {marcas.length > 0 ? (
+                                        marcas
+                                            .filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase()))
+                                            .map(m => (
+                                                <div
+                                                    key={m.id}
+                                                    className={`px-4 py-2 cursor-pointer hover:bg-primary/10 ${marcaId === m.id ? 'bg-primary/10 font-bold' : ''}`}
+                                                    onMouseDown={() => {
+                                                        setMarcaId(m.id);
+                                                        setMarcaInput(m.nombre);
+                                                        setShowMarcaList(false);
+                                                    }}
+                                                >
+                                                    {m.nombre}
+                                                </div>
+                                            ))
+                                    ) : (
+                                        <div className="px-4 py-2 text-slate-400">Cargando marcas...</div>
+                                    )}
                                     {marcas.filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase())).length === 0 && (
                                         <div className="px-4 py-2 text-slate-400">Sin resultados</div>
                                     )}

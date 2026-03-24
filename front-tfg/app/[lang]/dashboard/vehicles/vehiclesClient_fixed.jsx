@@ -9,10 +9,25 @@ import MobileMenuOverlay from '@/components/MobileMenuOverlay';
 
 export default function VehiclesClient({ dict }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [vehicles, setVehicles] = useState([]);
     const router = useRouter();
     const params = useParams();
     const lang = params?.lang || 'en';
     const t = useTranslation(dict);
+
+    useEffect(() => {
+        // Reemplaza esto por cómo obtienes el token en tu app
+        const token = localStorage.getItem('token');
+        fetch('http://localhost:8000/api/vehiculos', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(res => res.json())
+            .then(data => setVehicles(data))
+            .catch(err => console.error(err));
+    }, []);
 
     const userProfile = (
         <div className="flex items-center gap-3 px-2">
@@ -26,7 +41,7 @@ export default function VehiclesClient({ dict }) {
 
     return (
         <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
-            <Sidebar 
+            <Sidebar
                 lang={lang}
                 router={router}
                 activePage="vehicles"
@@ -35,7 +50,7 @@ export default function VehiclesClient({ dict }) {
             />
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <MobileHeader 
+                <MobileHeader
                     onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
                     isMenuOpen={isMenuOpen}
                 />
@@ -71,10 +86,10 @@ export default function VehiclesClient({ dict }) {
                                 <div className="w-full md:flex-1">
                                     <label className="flex items-center w-full bg-slate-100 dark:bg-slate-800 px-3 md:px-4 rounded-lg focus-within:ring-2 ring-primary/20 transition-all">
                                         <span className="material-symbols-outlined text-slate-400 text-lg">search</span>
-                                        <input 
-                                            className="bg-transparent border-none focus:ring-0 text-xs md:text-sm w-full py-2 md:py-2.5 placeholder:text-slate-500" 
-                                            placeholder={t('vehicles.search_placeholder', 'Search...')} 
-                                            type="text" 
+                                        <input
+                                            className="bg-transparent border-none focus:ring-0 text-xs md:text-sm w-full py-2 md:py-2.5 placeholder:text-slate-500"
+                                            placeholder={t('vehicles.search_placeholder', 'Search...')}
+                                            type="text"
                                         />
                                     </label>
                                 </div>
@@ -89,28 +104,37 @@ export default function VehiclesClient({ dict }) {
 
                         {/* GRID DE VEHÍCULOS */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {/* Ejemplo de Tarjeta de Vehículo */}
-                            <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm border-b-4 border-b-primary">
-                                <div className="relative h-44 md:h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                                    <img alt="Tesla" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" />
-                                    <div className="absolute top-3 right-3">
-                                        <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-sm backdrop-blur-sm">Active</span>
-                                    </div>
-                                </div>
-                                <div className="p-4 md:p-5">
-                                    <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-4">2021 Tesla Model 3</h3>
-                                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-800 pt-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">{t('vehicles.stats.mileage', 'Mileage')}</span>
-                                            <span className="text-sm font-bold">42,500 km</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">{t('vehicles.stats.last_service', 'Last Service')}</span>
-                                            <span className="text-sm font-bold">Aug 12, 2023</span>
+                            {vehicles.map((vehiculo) => (
+                                <div key={vehiculo.id} className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm border-b-4 border-b-primary">
+                                    <div className="relative h-44 md:h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                        <img
+                                            alt={vehiculo.modelo?.nombre || 'Vehículo'}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            src={vehiculo.imagen_url || "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800"}
+                                        />
+                                        <div className="absolute top-3 right-3">
+                                            <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-sm backdrop-blur-sm">
+                                                {vehiculo.activo ? "Active" : "Inactive"}
+                                            </span>
                                         </div>
                                     </div>
+                                    <div className="p-4 md:p-5">
+                                        <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-4">
+                                            {vehiculo.fecha_primera_matriculacion?.slice(0, 4) || 'Año'} {vehiculo.marca?.nombre} {vehiculo.modelo?.nombre}
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">{t('vehicles.stats.mileage', 'Mileage')}</span>
+                                                <span className="text-sm font-bold">{vehiculo.kilometros_recorridos} km</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">{t('vehicles.stats.last_service', 'Last Service')}</span>
+                                                <span className="text-sm font-bold">{vehiculo.ultima_fecha_itv || '-'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
 
                             {/* Botón Añadir Nuevo */}
                             <button className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-primary/5 transition-all text-slate-400 hover:text-primary min-h-[250px]">
@@ -122,7 +146,7 @@ export default function VehiclesClient({ dict }) {
                 </main>
             </div>
 
-            <MobileMenuOverlay 
+            <MobileMenuOverlay
                 isOpen={isMenuOpen}
                 onClose={() => setIsMenuOpen(false)}
                 lang={lang}
