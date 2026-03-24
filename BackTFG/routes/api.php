@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminDataController;
+use App\Http\Controllers\VehiculoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -12,7 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user/{id}', [AuthController::class, 'destroy']);
     
     // Rutas para el CRUD de Vehículos
-    Route::apiResource('vehiculos', VehiculoController::class);
+    Route::apiResource('/vehiculos', VehiculoController::class);
 
     // Rutas para expandir el catálogo (Create)
     Route::post('/admin/marcas', [AdminDataController::class, 'storeMarca']);

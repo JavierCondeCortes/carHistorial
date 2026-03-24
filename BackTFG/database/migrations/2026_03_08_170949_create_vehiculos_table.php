@@ -17,10 +17,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('marca_id')->constrained('marcas');
             $table->foreignId('modelo_id')->constrained('modelos');
-            $table->foreignId('motorizacion_id')->constrained('motorizaciones');
             $table->foreignId('pegatina_id')->constrained('pegatinas');
-
+            $table->foreignId('tipo_combustible_id')->constrained('tipos_combustibles');
+            
             // Datos del coche
+            $table->string('motorizacion');
             $table->string('color');
             $table->date('fecha_primera_matriculacion')->nullable();
             $table->integer('plazas')->default(5);

@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pegatinas extends Model
 {
-    //
+    protected $fillable = ['nombre'];
 }
