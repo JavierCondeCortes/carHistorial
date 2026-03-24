@@ -54,10 +54,16 @@ export default function VehicleDocumentsVault({ dict }) {
                                     </p>
                                 </div>
                             </div>
-                            <button className="hidden lg:flex bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white hover:bg-slate-50 font-bold py-2.5 px-5 rounded-lg text-sm items-center gap-2 shadow-sm transition-all">
-                                <span className="material-symbols-outlined text-sm">create_new_folder</span>
-                                {t('dashboard.docs_vault.new_folder')}
-                            </button>
+                            <div className="flex gap-2">
+                                <button className="flex  bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white hover:bg-slate-50 font-bold py-2.5 px-5 rounded-lg text-sm items-center gap-2 shadow-sm transition-all">
+                                    <span className="material-symbols-outlined text-sm">upload_file</span>
+                                    {t('dashboard.docs_vault.new_file')}
+                                </button>
+                                <button className="flex bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white hover:bg-slate-50 font-bold py-2.5 px-5 rounded-lg text-sm items-center gap-2 shadow-sm transition-all">
+                                    <span className="material-symbols-outlined text-sm">create_new_folder</span>
+                                    {t('dashboard.docs_vault.new_folder')}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Dropzone Responsivo */}
@@ -126,7 +132,7 @@ export default function VehicleDocumentsVault({ dict }) {
                         </div>
 
                         {/* Widgets de Inferiores (PC) */}
-                        <div className="hidden lg:grid grid-cols-2 gap-6 pb-8">
+                        <div className="hidden lg:grid grid-cols-2 gap-6 pt-8 pb-8">
                             <StorageWidget t={t} />
                             <AlertsWidget t={t} />
                         </div>

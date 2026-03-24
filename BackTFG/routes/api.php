@@ -4,6 +4,8 @@ Route::get('/marcas', [MarcaController::class, 'index']);
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminDataController;
+use App\Http\Controllers\VehiculoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

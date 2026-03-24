@@ -124,9 +124,10 @@
             "placeholder": "Buscar en los documentos..."
         },
         "docs_vault": {
-            "title": "Bóveda de Documentos",
+            "title": "Documentos",
             "subtitle": "Registros digitales para",
             "new_folder": "Nueva Carpeta",
+            "new_file": "Nuevo Documento",
             "dropzone_title": "Arrastra y suelta documentos aquí",
             "dropzone_subtitle": "O haz clic para buscar (PDF, JPG, PNG hasta 10MB)",
             "categories": {

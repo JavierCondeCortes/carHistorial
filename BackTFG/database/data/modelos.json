@@ -1,0 +1,322 @@
+[
+    {
+        "marca": "Abarth",
+        "nombre": "595"
+    },
+    {
+        "marca": "Abarth",
+        "nombre": "695"
+    },
+    {
+        "marca": "Alfa Romeo",
+        "nombre": "Giulia"
+    },
+    {
+        "marca": "Alfa Romeo",
+        "nombre": "Stelvio"
+    },
+    {
+        "marca": "Audi",
+        "nombre": "A3"
+    },
+    {
+        "marca": "Audi",
+        "nombre": "Q5"
+    },
+    {
+        "marca": "BMW",
+        "nombre": "Serie 3"
+    },
+    {
+        "marca": "BMW",
+        "nombre": "X5"
+    },
+    {
+        "marca": "BYD",
+        "nombre": "Atto 3"
+    },
+    {
+        "marca": "BYD",
+        "nombre": "Seal"
+    },
+    {
+        "marca": "Citroën",
+        "nombre": "C3"
+    },
+    {
+        "marca": "Citroën",
+        "nombre": "Berlingo"
+    },
+    {
+        "marca": "Cupra",
+        "nombre": "Formentor"
+    },
+    {
+        "marca": "Cupra",
+        "nombre": "Born"
+    },
+    {
+        "marca": "Dacia",
+        "nombre": "Sandero"
+    },
+    {
+        "marca": "Dacia",
+        "nombre": "Duster"
+    },
+    {
+        "marca": "DS Automobiles",
+        "nombre": "DS 4"
+    },
+    {
+        "marca": "DS Automobiles",
+        "nombre": "DS 7"
+    },
+    {
+        "marca": "Ferrari",
+        "nombre": "296 GTB"
+    },
+    {
+        "marca": "Ferrari",
+        "nombre": "Purosangue"
+    },
+    {
+        "marca": "Fiat",
+        "nombre": "500"
+    },
+    {
+        "marca": "Fiat",
+        "nombre": "Panda"
+    },
+    {
+        "marca": "Ford",
+        "nombre": "Focus"
+    },
+    {
+        "marca": "Ford",
+        "nombre": "Mustang Mach-E"
+    },
+    {
+        "marca": "Honda",
+        "nombre": "Civic"
+    },
+    {
+        "marca": "Honda",
+        "nombre": "CR-V"
+    },
+    {
+        "marca": "Hyundai",
+        "nombre": "Tucson"
+    },
+    {
+        "marca": "Hyundai",
+        "nombre": "Ioniq 5"
+    },
+    {
+        "marca": "Jaguar",
+        "nombre": "F-Pace"
+    },
+    {
+        "marca": "Jaguar",
+        "nombre": "I-Pace"
+    },
+    {
+        "marca": "Jeep",
+        "nombre": "Renegade"
+    },
+    {
+        "marca": "Jeep",
+        "nombre": "Wrangler"
+    },
+    {
+        "marca": "Kia",
+        "nombre": "Sportage"
+    },
+    {
+        "marca": "Kia",
+        "nombre": "EV6"
+    },
+    {
+        "marca": "Lamborghini",
+        "nombre": "Urus"
+    },
+    {
+        "marca": "Lamborghini",
+        "nombre": "Revuelto"
+    },
+    {
+        "marca": "Land Rover",
+        "nombre": "Defender"
+    },
+    {
+        "marca": "Land Rover",
+        "nombre": "Range Rover Evoque"
+    },
+    {
+        "marca": "Lexus",
+        "nombre": "UX"
+    },
+    {
+        "marca": "Lexus",
+        "nombre": "RX"
+    },
+    {
+        "marca": "Maserati",
+        "nombre": "Grecale"
+    },
+    {
+        "marca": "Maserati",
+        "nombre": "Levante"
+    },
+    {
+        "marca": "Mazda",
+        "nombre": "CX-5"
+    },
+    {
+        "marca": "Mazda",
+        "nombre": "MX-5"
+    },
+    {
+        "marca": "Mercedes-Benz",
+        "nombre": "Clase C"
+    },
+    {
+        "marca": "Mercedes-Benz",
+        "nombre": "EQC"
+    },
+    {
+        "marca": "MG",
+        "nombre": "ZS"
+    },
+    {
+        "marca": "MG",
+        "nombre": "MG4"
+    },
+    {
+        "marca": "Mini",
+        "nombre": "Cooper"
+    },
+    {
+        "marca": "Mini",
+        "nombre": "Countryman"
+    },
+    {
+        "marca": "Mitsubishi",
+        "nombre": "ASX"
+    },
+    {
+        "marca": "Mitsubishi",
+        "nombre": "Outlander"
+    },
+    {
+        "marca": "Nissan",
+        "nombre": "Qashqai"
+    },
+    {
+        "marca": "Nissan",
+        "nombre": "Juke"
+    },
+    {
+        "marca": "Opel",
+        "nombre": "Corsa"
+    },
+    {
+        "marca": "Opel",
+        "nombre": "Astra"
+    },
+    {
+        "marca": "Peugeot",
+        "nombre": "208"
+    },
+    {
+        "marca": "Peugeot",
+        "nombre": "406"
+    },
+    {
+        "marca": "Porsche",
+        "nombre": "911"
+    },
+    {
+        "marca": "Porsche",
+        "nombre": "Taycan"
+    },
+    {
+        "marca": "Renault",
+        "nombre": "Clio"
+    },
+    {
+        "marca": "Renault",
+        "nombre": "Austral"
+    },
+    {
+        "marca": "Seat",
+        "nombre": "Ibiza"
+    },
+    {
+        "marca": "Seat",
+        "nombre": "Leon"
+    },
+    {
+        "marca": "Skoda",
+        "nombre": "Octavia"
+    },
+    {
+        "marca": "Skoda",
+        "nombre": "Kodiaq"
+    },
+    {
+        "marca": "Smart",
+        "nombre": "#1"
+    },
+    {
+        "marca": "Smart",
+        "nombre": "Fortwo"
+    },
+    {
+        "marca": "Subaru",
+        "nombre": "Forester"
+    },
+    {
+        "marca": "Subaru",
+        "nombre": "XV"
+    },
+    {
+        "marca": "Suzuki",
+        "nombre": "Swift"
+    },
+    {
+        "marca": "Suzuki",
+        "nombre": "Vitara"
+    },
+    {
+        "marca": "Tesla",
+        "nombre": "Model 3"
+    },
+    {
+        "marca": "Tesla",
+        "nombre": "Model Y"
+    },
+    {
+        "marca": "Toyota",
+        "nombre": "Corolla"
+    },
+    {
+        "marca": "Toyota",
+        "nombre": "RAV4"
+    },
+    {
+        "marca": "Volkswagen",
+        "nombre": "Golf"
+    },
+    {
+        "marca": "Volkswagen",
+        "nombre": "ID.4"
+    },
+    {
+        "marca": "Volvo",
+        "nombre": "XC40"
+    },
+    {
+        "marca": "Volvo",
+        "nombre": "XC60"
+    }
+]
