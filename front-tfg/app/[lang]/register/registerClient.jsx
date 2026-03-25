@@ -40,22 +40,34 @@ export default function RegisterClient({ dict, lang }) {
             });
 
             const data = await response.json();
+            console.log("Datos de Laravel:", data); // Mira esto para confirmar que llega el JSON limpio
 
             if (response.ok) {
-                // Si Laravel devuelve el token, lo guardamos antes de redirigir
-                if (data.access_token) {
-                    setTokenCookie(data.access_token);
-                }
+                // ÉXITO
+                if (data.access_token) setTokenCookie(data.access_token);
                 router.push(`/${lang}/dashboard`);
             } else {
-                // Manejo de errores de validación de Laravel 12
-                setErrors(data.errors || { message: data.message || "Error en el registro" });
+                // ERROR (400 o 422)
+                // Aquí forzamos a que 'errors' sea un objeto que React pueda leer.
+                // Si Laravel envía { "email": ["..."] }, lo guardamos directamente.
+                const serverErrors = data.errors ? data.errors : data;
+
+                setErrors({
+                    ...serverErrors,
+                    message: data.message || "Revisa los datos introducidos"
+                });
+
+                setLoading(false); // Importante: detener el estado de carga
             }
         } catch (error) {
-            // Si el error persiste, es probable que el AdBlock bloquee la palabra "register"
-            setErrors({ message: "Error: No se pudo conectar con el servidor. Si usas AdBlock, desactívalo para esta web." });
-        } finally {
-            setLoading(false);
+            // ESTO ES LO MÁS IMPORTANTE: Mira la consola (F12) después de esto
+            console.error("EXCEPCIÓN CAPTURADA:", error);
+
+            if (error.name === 'SyntaxError') {
+                setErrors({ message: "El servidor respondió con algo que no es JSON (posible error de PHP oculto)." });
+            } else {
+                setErrors({ message: "Error de Red/CORS: El navegador bloqueó la respuesta o el servidor se cayó." });
+            }
         }
     };
 
@@ -120,9 +132,13 @@ export default function RegisterClient({ dict, lang }) {
                                 <p className="text-slate-500">{dict.register.subtitle}</p>
                             </div>
 
+                            {/* Mensaje de error general arriba del formulario */}
                             {errors?.message && (
-                                <div className="mb-4 p-3 bg-red-100 text-red-600 rounded-lg text-sm font-bold border border-red-200">
-                                    {errors.message}
+                                <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined">error</span>
+                                        <p className="text-sm font-bold">{errors.message}</p>
+                                    </div>
                                 </div>
                             )}
 
@@ -151,12 +167,19 @@ export default function RegisterClient({ dict, lang }) {
                                             required
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.email ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} rounded-lg focus:border-primary outline-none transition-all`}
+                                            className={`block w-full h-12 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border ${errors?.email ? 'border-red-500 bg-red-50' : 'border-slate-200 dark:border-slate-700'
+                                                } rounded-lg focus:border-primary outline-none transition-all`}
                                             placeholder={dict.register.placeholder_email}
                                             type="email"
                                         />
                                     </div>
-                                    {errors?.email && <span className="text-xs text-red-500">{errors.email[0]}</span>}
+
+                                    {/* MENSAJE DE ERROR PERSONALIZADO DE LARAVEL */}
+                                    {errors?.email && (
+                                        <span className="text-xs text-red-500 font-bold animate-pulse">
+                                            {errors.email[0]}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col gap-2">

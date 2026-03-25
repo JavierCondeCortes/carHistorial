@@ -1,6 +1,3 @@
-// Ruta pública para obtener todas las marcas (solo nombres)
-use App\Http\Controllers\MarcaController;
-Route::get('/marcas', [MarcaController::class, 'index']);
 <?php
 
 use App\Http\Controllers\AuthController;

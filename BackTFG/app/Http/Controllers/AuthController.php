@@ -16,7 +16,23 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
+        ], [
+            // AQUÍ PERSONALIZAS TUS MENSAJES
+            'name.required' => '¡Oye! Necesitamos saber tu nombre .',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ese formato de correo no parece válido.',
+            'email.unique' => 'Este correo ya está registrado, ¡prueba a iniciar sesión!',
+            'password.min' => 'La seguridad es lo primero: la contraseña debe tener al menos 8 caracteres.',
         ]);
+
+        if ($validator->fails()) {
+            // IMPORTANTE: Envolvemos en la clave 'errors' para el JSX
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Revisa los campos del formulario.',
+                'errors' => $validator->errors()
+            ], 400);
+        }
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
@@ -52,7 +68,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         // 3. Verificamos: ¿Existe el usuario? ¿La contraseña coincide con el hash?
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'Las credenciales proporcionadas son incorrectas.'
             ], 401);
