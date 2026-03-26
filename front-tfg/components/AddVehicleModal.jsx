@@ -1,235 +1,216 @@
 import React, { useState, useEffect } from 'react';
 import AlertItem from './AlertItem';
 
-const AddVehicleModal = ({ isOpen, onClose, onSubmit, modelos = [], motorizaciones = [], pegatinas = [], errors = {} }) => {
+const AddVehicleModal = ({ isOpen, onClose, onSubmit, modelos = [], motorizaciones = [], pegatinas = [], tiposCombustible = [] }) => {
+    // 1. Iniciamos el estado basado en si está abierto o no
+    const [visible, setVisible] = useState(isOpen);
+    
+    // Estados para los selectores con búsqueda
     const [marcas, setMarcas] = useState([]);
     const [marcaInput, setMarcaInput] = useState('');
     const [marcaId, setMarcaId] = useState('');
     const [showMarcaList, setShowMarcaList] = useState(false);
-        // Cargar marcas desde la API al abrir el modal
-        useEffect(() => {
-            if (isOpen) {
-                fetch('http://localhost:8000/api/marcas')
-                    .then(res => res.json())
-                    .then(data => setMarcas(data))
-                    .catch(() => setMarcas([]));
-            }
-        }, [isOpen]);
+
     const [modeloInput, setModeloInput] = useState('');
     const [modeloId, setModeloId] = useState('');
-    const [motorizacionId, setMotorizacionId] = useState('');
-    const [pegatinaId, setPegatinaId] = useState('');
-    const [visible, setVisible] = useState(false);
-    // Estado para error general
+    const [showModeloList, setShowModeloList] = useState(false);
+
+    // Estado para errores
     const [formError, setFormError] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
 
-    React.useEffect(() => {
+    useEffect(() => {
+        let timer;
         if (isOpen) {
-            setVisible(true);
+            // CARGA DE DATOS
+            fetch('http://localhost:8000/api/marcas')
+                .then(res => res.json())
+                .then(data => setMarcas(data))
+                .catch(() => setMarcas([]));
+
+            // SOLUCIÓN AL ERROR: Usamos un pequeño delay para evitar el "cascading render"
+            timer = setTimeout(() => setVisible(true), 10);
         } else {
-            // Espera la animación de salida antes de ocultar
-            setTimeout(() => setVisible(false), 300);
+            // Animación de salida: esperamos 300ms (duración de la transición) antes de desmontar
+            timer = setTimeout(() => {
+                setVisible(false);
+                // Limpiar formulario al terminar la animación de cierre
+                setMarcaInput('');
+                setMarcaId('');
+                setModeloInput('');
+                setModeloId('');
+                setFieldErrors({});
+                setFormError(null);
+            }, 300);
         }
+
+        return () => clearTimeout(timer);
     }, [isOpen]);
 
+    // Renderizado condicional: si no está abierto ni es visible (animación), no renderizamos
     if (!visible && !isOpen) return null;
-    const modalAnim = isOpen ? 'modal-fade-in' : 'modal-fade-out';
-    // Handler para submit personalizado
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setFormError(null);
-        const form = e.target;
+        
         const newFieldErrors = {};
-        // Solo marca y modelo obligatorios
-        if (!marcaInput || !marcaId) newFieldErrors.marca = 'La marca es obligatoria';
-        if (!modeloInput || !modeloId) newFieldErrors.modelo = 'El modelo es obligatorio';
+        if (!marcaId) newFieldErrors.marca = 'Selecciona una marca de la lista';
+        if (!modeloId) newFieldErrors.modelo = 'Selecciona un modelo de la lista';
+        
         setFieldErrors(newFieldErrors);
+
         if (Object.keys(newFieldErrors).length > 0) {
-            setFormError('Por favor, completa los campos obligatorios.');
+            setFormError('Marca y Modelo son obligatorios.');
             return;
         }
-        onSubmit(e);
+
+        onSubmit(e); 
     };
 
     return (
         <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-            <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-12 w-full max-w-6xl border border-primary/30 transition-transform duration-300 flex ${modalAnim}`}>
-                {/* Animaciones personalizadas para el modal y errores */}
-                <style jsx>{`
-                @keyframes modalFadeIn {
-                    0% { opacity: 0; transform: scale(0.95); }
-                    100% { opacity: 1; transform: scale(1); }
-                }
-                @keyframes modalFadeOut {
-                    0% { opacity: 1; transform: scale(1); }
-                    100% { opacity: 0; transform: scale(0.95); }
-                }
-                .modal-fade-in {
-                    animation: modalFadeIn 0.3s ease;
-                }
-                .modal-fade-out {
-                    animation: modalFadeOut 0.3s ease;
-                }
-                @keyframes fade-in {
-                    0% { opacity: 0; transform: translateY(-8px); }
-                    100% { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fade-in {
-                    animation: fade-in 0.2s ease;
-                }
-                `}</style>
+            <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-6xl border border-primary/30 transition-all duration-300 flex ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+                
                 {/* Columna izquierda: imagen */}
-                <div className="hidden md:flex flex-col items-center justify-center w-1/2 pr-12">
-                    <div className="w-full h-[500px] rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-primary/20">
-                        {/* Aquí puedes poner tu imagen personalizada */}
+                <div className="hidden md:flex flex-col items-center justify-center w-1/3 pr-8">
+                    <div className="w-full h-full max-h-[500px] rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-primary/20">
                         <img src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" alt="Vehículo" className="object-cover w-full h-full" />
                     </div>
                 </div>
+
                 {/* Columna derecha: formulario */}
-                <div className="w-full md:w-1/2">
-                    <h2 className="text-3xl font-black mb-8 text-primary text-center">Agregar Vehículo</h2>
-                    <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Alerta general de error */}
+                <div className="w-full md:w-2/3">
+                    <h2 className="text-2xl font-black mb-6 text-primary uppercase tracking-tight">Registrar Vehículo</h2>
+                    
+                    <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {formError && (
-                            <div className="col-span-1 md:col-span-2">
+                            <div className="col-span-full">
                                 <AlertItem type="error" message={formError} />
                             </div>
                         )}
-                        {/* Marca (combobox) */}
-                        <label className="flex flex-col gap-1 relative">
-                            <span className="font-semibold text-sm">Marca</span>
+
+                        {/* MARCA */}
+                        <div className="flex flex-col gap-1 relative">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Marca *</span>
                             <input
-                                className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                                name="marca_id"
-                                autoComplete="off"
-                                placeholder="Escribe o selecciona marca"
+                                className={`border rounded-lg p-2.5 text-sm outline-none transition-all ${fieldErrors.marca ? 'border-red-500' : 'border-primary/30 focus:border-primary'}`}
+                                placeholder="Buscar marca..."
                                 value={marcaInput}
                                 onFocus={() => setShowMarcaList(true)}
-                                onBlur={() => setTimeout(() => setShowMarcaList(false), 150)}
-                                onChange={e => {
-                                    setMarcaInput(e.target.value);
-                                    setMarcaId('');
-                                    setShowMarcaList(true);
-                                }}
+                                onBlur={() => setTimeout(() => setShowMarcaList(false), 200)}
+                                onChange={e => { setMarcaInput(e.target.value); setMarcaId(''); }}
                             />
-                            {(showMarcaList || marcaInput) && (
-                                <div className="absolute top-16 left-0 w-full bg-white dark:bg-slate-900 border border-primary/30 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
-                                    {marcas.length > 0 ? (
-                                        marcas
-                                            .filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase()))
-                                            .map(m => (
-                                                <div
-                                                    key={m.id}
-                                                    className={`px-4 py-2 cursor-pointer hover:bg-primary/10 ${marcaId === m.id ? 'bg-primary/10 font-bold' : ''}`}
-                                                    onMouseDown={() => {
-                                                        setMarcaId(m.id);
-                                                        setMarcaInput(m.nombre);
-                                                        setShowMarcaList(false);
-                                                    }}
-                                                >
-                                                    {m.nombre}
-                                                </div>
-                                            ))
-                                    ) : (
-                                        <div className="px-4 py-2 text-slate-400">Cargando marcas...</div>
-                                    )}
-                                    {marcas.filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase())).length === 0 && (
-                                        <div className="px-4 py-2 text-slate-400">Sin resultados</div>
-                                    )}
-                                </div>
-                            )}
-                            <input type="hidden" name="marca_id" value={marcaId} />
-                            {fieldErrors.marca && (
-                                <AlertItem type="error" message={fieldErrors.marca} />
-                            )}
-                        </label>
-                        {/* Modelo (combobox, filtrado por marca) */}
-                        <label className="flex flex-col gap-1 relative">
-                            <span className="font-semibold text-sm">Modelo</span>
-                            <input
-                                className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                                name="modelo_id"
-                                autoComplete="off"
-                                placeholder="Escribe o selecciona modelo"
-                                value={modeloInput}
-                                onChange={e => {
-                                    setModeloInput(e.target.value);
-                                    setModeloId('');
-                                }}
-                            />
-                            {modeloInput && (
-                                <div className="absolute top-16 left-0 w-full bg-white dark:bg-slate-900 border border-primary/30 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
-                                    {modelos.filter(m =>
-                                        (!marcaId || m.marca_id === Number(marcaId)) &&
-                                        m.nombre.toLowerCase().includes(modeloInput.toLowerCase())
-                                    ).map(m => (
-                                        <div
-                                            key={m.id}
-                                            className="px-4 py-2 cursor-pointer hover:bg-primary/10"
-                                            onClick={() => {
-                                                setModeloId(m.id);
-                                                setModeloInput(m.nombre);
-                                            }}
-                                        >
+                            {showMarcaList && (
+                                <div className="absolute top-full left-0 w-full bg-white dark:bg-slate-800 border shadow-2xl z-50 max-h-40 overflow-y-auto rounded-b-lg">
+                                    {marcas.filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase())).map(m => (
+                                        <div key={m.id} className="p-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setMarcaId(m.id); setMarcaInput(m.nombre); }}>
                                             {m.nombre}
                                         </div>
                                     ))}
-                                    {modelos.filter(m =>
-                                        (!marcaId || m.marca_id === Number(marcaId)) &&
-                                        m.nombre.toLowerCase().includes(modeloInput.toLowerCase())
-                                    ).length === 0 && (
-                                            <div className="px-4 py-2 text-slate-400">Sin resultados</div>
-                                        )}
+                                </div>
+                            )}
+                            <input type="hidden" name="marca_id" value={marcaId} />
+                        </div>
+
+                        {/* MODELO */}
+                        <div className="flex flex-col gap-1 relative">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Modelo *</span>
+                            <input
+                                className={`border rounded-lg p-2.5 text-sm outline-none transition-all ${!marcaId ? 'bg-slate-50 cursor-not-allowed opacity-50' : ''} ${fieldErrors.modelo ? 'border-red-500' : 'border-primary/30 focus:border-primary'}`}
+                                placeholder={marcaId ? "Buscar modelo..." : "Selecciona marca primero"}
+                                value={modeloInput}
+                                disabled={!marcaId}
+                                onFocus={() => setShowModeloList(true)}
+                                onBlur={() => setTimeout(() => setShowModeloList(false), 200)}
+                                onChange={e => { setModeloInput(e.target.value); setModeloId(''); }}
+                            />
+                            {showModeloList && marcaId && (
+                                <div className="absolute top-full left-0 w-full bg-white dark:bg-slate-800 border shadow-2xl z-50 max-h-40 overflow-y-auto rounded-b-lg">
+                                    {modelos
+                                        .filter(m => m.marca_id === Number(marcaId) && m.nombre.toLowerCase().includes(modeloInput.toLowerCase()))
+                                        .map(m => (
+                                            <div key={m.id} className="p-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setModeloId(m.id); setModeloInput(m.nombre); }}>
+                                                {m.nombre}
+                                            </div>
+                                        ))
+                                    }
                                 </div>
                             )}
                             <input type="hidden" name="modelo_id" value={modeloId} />
-                            {fieldErrors.modelo && (
-                                <AlertItem type="error" message={fieldErrors.modelo} />
-                            )}
-                        </label>
-                        {/* pegatina ya no es obligatoria */}
-                        {/* Motorización (solo desplegable) */}
-                        <label className="flex flex-col gap-1">
-                            <span className="font-semibold text-sm">Motorización</span>
-                            <select className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="motorizacion_id" value={motorizacionId} onChange={e => setMotorizacionId(e.target.value)}>
-                                <option value="">Selecciona motorización</option>
+                        </div>
+
+                        {/* COMBUSTIBLE */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Combustible</span>
+                            <select name="tipo_combustible_id" className="border border-primary/30 rounded-lg p-2.5 text-sm">
+                                <option value="">Seleccionar...</option>
+                                {tiposCombustible.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                            </select>
+                        </div>
+
+                        {/* MOTORIZACIÓN */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Motorización</span>
+                            <select name="motorizacion" className="border border-primary/30 rounded-lg p-2.5 text-sm">
+                                <option value="">Seleccionar...</option>
                                 {motorizaciones.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                             </select>
-                            {/* motorizacion ya no es obligatoria */}
-                        </label>
-                        {/* Pegatina (solo desplegable) */}
-                        <label className="flex flex-col gap-1">
-                            <span className="font-semibold text-sm">Pegatina</span>
-                            <select className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="pegatina_id" value={pegatinaId} onChange={e => setPegatinaId(e.target.value)}>
-                                <option value="">Selecciona pegatina</option>
+                        </div>
+
+                        {/* PEGATINA */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Pegatina</span>
+                            <select name="pegatina_id" className="border border-primary/30 rounded-lg p-2.5 text-sm">
+                                <option value="">Seleccionar...</option>
                                 {pegatinas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                             </select>
-                        </label>
-                        {/* Color */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="color" placeholder="Color" />
-                        {/* color ya no es obligatorio */}
-                        {/* Fecha primera matriculación */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="fecha_primera_matriculacion" placeholder="Fecha primera matriculación" type="date" />
-                        {/* fecha_primera_matriculacion ya no es obligatoria */}
-                        {/* Plazas */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="plazas" placeholder="Plazas" type="number" min="1" />
-                        {/* plazas ya no es obligatorio */}
-                        {/* Kilómetros recorridos */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="kilometros_recorridos" placeholder="Kilómetros recorridos" type="number" min="0" />
-                        {/* kilometros ya no es obligatorio */}
-                        {/* Última fecha ITV */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="ultima_fecha_itv" placeholder="Última fecha ITV" type="date" />
-                        {/* Matrícula */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="matricula" placeholder="Matrícula" />
-                        {/* matricula ya no es obligatoria */}
-                        {/* Número bastidor */}
-                        <input className="border border-primary/30 rounded-lg p-3 text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" name="numero_bastidor" placeholder="Número bastidor" />
-                        {/* numero_bastidor ya no es obligatorio */}
-                        {/* Botones */}
-                        <div className="col-span-1 md:col-span-2 flex gap-2 justify-end mt-2">
-                            <button type="button" onClick={onClose} className="bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-5 py-2 font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition-all">Cancelar</button>
-                            <button type="submit" className="bg-primary text-white rounded-lg px-5 py-2 font-bold shadow-md hover:bg-primary/90 transition-all">Agregar</button>
+                        </div>
+
+                        {/* COLOR */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Color</span>
+                            <input name="color" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="Ej: Blanco" />
+                        </div>
+
+                        {/* FECHA MATRICULACION */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Matriculación</span>
+                            <input name="fecha_primera_matriculacion" type="date" className="border border-primary/30 rounded-lg p-2.5 text-sm" />
+                        </div>
+
+                        {/* PLAZAS */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Plazas</span>
+                            <input name="plazas" type="number" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="5" />
+                        </div>
+
+                        {/* KM */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Kilómetros</span>
+                            <input name="kilometros_recorridos" type="number" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="0" />
+                        </div>
+
+                        {/* MATRÍCULA */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Matrícula</span>
+                            <input name="matricula" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="1234ABC" />
+                        </div>
+
+                        {/* BASTIDOR */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-bold text-[10px] uppercase text-slate-400">Nº Bastidor</span>
+                            <input name="numero_bastidor" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="VIN..." />
+                        </div>
+
+                        {/* BOTONES */}
+                        <div className="col-span-full flex gap-3 justify-end mt-6">
+                            <button type="button" onClick={onClose} className="px-6 py-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors uppercase">
+                                Cancelar
+                            </button>
+                            <button type="submit" className="bg-primary text-white px-10 py-2 rounded-lg font-black text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all uppercase">
+                                Guardar Vehículo
+                            </button>
                         </div>
                     </form>
                 </div>

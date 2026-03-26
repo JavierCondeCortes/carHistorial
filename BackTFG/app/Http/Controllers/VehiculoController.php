@@ -18,8 +18,9 @@ class VehiculoController extends Controller
         $data = $request->validate([
             'marca_id' => 'required|exists:marcas,id',
             'modelo_id' => 'required|exists:modelos,id',
-            'motorizacion_id' => 'required|exists:motorizaciones,id',
             'pegatina_id' => 'required|exists:pegatinas_medioambientales,id',
+            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
+            'motorizacion' => 'required|exists:motorizaciones,id',
             'color' => 'required|string',
             'kilometros_recorridos' => 'required|integer',
             'numero_bastidor' => 'required|string|unique:vehiculos,numero_bastidor',
