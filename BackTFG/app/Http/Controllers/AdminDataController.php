@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Marca;
-use App\Models\Modelo;
-use App\Models\Motorizacion;
+use App\Models\Modelos;
+use App\Models\Motorizaciones;
 use Illuminate\Http\Request;
 
-class AdminDataController extends Controller
+class AdminDataController extends Controller{
     // Obtener todas las marcas
     public function indexMarcas() {
         return response()->json(Marca::all());
     }
-{
+
     // Crear nueva Marca
     public function storeMarca(Request $request) {
         $request->validate(['nombre' => 'required|unique:marcas']);
@@ -26,7 +26,7 @@ class AdminDataController extends Controller
             'nombre' => 'required',
             'marca_id' => 'required|exists:marcas,id'
         ]);
-        $modelo = Modelo::create($request->all());
+        $modelo = Modelos::create($request->all());
         return response()->json($modelo, 201);
     }
 
@@ -38,7 +38,7 @@ class AdminDataController extends Controller
             'kilowatios' => 'nullable|integer',
             'tipo_combustible_id' => 'required|exists:tipos_combustible,id'
         ]);
-        $motor = Motorizacion::create($request->all());
+        $motor = Motorizaciones::create($request->all());
         return response()->json($motor, 201);
     }
 }
