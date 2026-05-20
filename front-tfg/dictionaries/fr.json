@@ -141,5 +141,73 @@
             "drivers": "Conducteurs",
             "pending": "2 en attente"
         }
+    },
+    "vehicleDetail": {
+        "fallbackTitle": "Vehicule",
+        "back": "Retour aux vehicules",
+        "emptyPlate": "Sans immatriculation",
+        "quickActions": "Actions rapides",
+        "actions": {
+            "addLiquid": "Ajouter liquide",
+            "addDocument": "Ajouter document",
+            "addMaintenance": "Ajouter maintenance",
+            "addFolder": "Creer dossier",
+            "save": "Enregistrer"
+        },
+        "sections": {
+            "liquids": "Liquides",
+            "documents": "Documents",
+            "maintenance": "Maintenances",
+            "folders": "Dossiers"
+        },
+        "empty": {
+            "liquids": "Aucun liquide enregistre",
+            "documents": "Aucun document enregistre",
+            "maintenance": "Aucune maintenance enregistree",
+            "folders": "Aucun dossier cree"
+        },
+        "forms": {
+            "liquid": "Ajouter liquide",
+            "document": "Ajouter document",
+            "maintenance": "Ajouter maintenance",
+            "folder": "Creer dossier"
+        },
+        "fields": {
+            "name": "Nom",
+            "type": "Type",
+            "attachment": "Piece jointe",
+            "productName": "Nom produit",
+            "liquidType": "Type liquide",
+            "changeKm": "Km changement",
+            "changeKmDone": "Km changement effectue",
+            "changeTime": "Temps changement",
+            "currentChangeDate": "Date changement actuel",
+            "path": "Chemin",
+            "title": "Titre",
+            "cost": "Cout",
+            "date": "Date",
+            "changeDate": "Date changement",
+            "folder": "Dossier",
+            "component": "Composant",
+            "description": "Description",
+            "km": "Km"
+        },
+        "errors": {
+            "liquidName": "Indiquez le nom du produit.",
+            "liquidType": "Indiquez le type de liquide.",
+            "km": "Les kilometres doivent etre un nombre superieur ou egal a 0.",
+            "datePast": "La date de changement ne peut pas etre future.",
+            "documentTitle": "Indiquez le titre du document.",
+            "cost": "Le cout doit etre un nombre superieur ou egal a 0.",
+            "component": "Indiquez le composant change."
+        },
+        "labels": {
+            "documents": "documents"
+        },
+        "messages": {
+            "saved": "Enregistre correctement.",
+            "error": "Impossible d'enregistrer.",
+            "folderLinkPending": "Document enregistre. Associez-le depuis le dossier quand l'API renvoie l'id."
+        }
     }
 }

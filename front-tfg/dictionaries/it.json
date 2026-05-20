@@ -141,5 +141,73 @@
             "drivers": "Conducenti",
             "pending": "2 In sospeso"
         }
+    },
+    "vehicleDetail": {
+        "fallbackTitle": "Veicolo",
+        "back": "Torna ai veicoli",
+        "emptyPlate": "Senza targa",
+        "quickActions": "Azioni rapide",
+        "actions": {
+            "addLiquid": "Aggiungi liquido",
+            "addDocument": "Aggiungi documento",
+            "addMaintenance": "Aggiungi manutenzione",
+            "addFolder": "Crea cartella",
+            "save": "Salva"
+        },
+        "sections": {
+            "liquids": "Liquidi",
+            "documents": "Documenti",
+            "maintenance": "Manutenzioni",
+            "folders": "Cartelle"
+        },
+        "empty": {
+            "liquids": "Nessun liquido registrato",
+            "documents": "Nessun documento registrato",
+            "maintenance": "Nessuna manutenzione registrata",
+            "folders": "Nessuna cartella creata"
+        },
+        "forms": {
+            "liquid": "Aggiungi liquido",
+            "document": "Aggiungi documento",
+            "maintenance": "Aggiungi manutenzione",
+            "folder": "Crea cartella"
+        },
+        "fields": {
+            "name": "Nome",
+            "type": "Tipo",
+            "attachment": "Allegato",
+            "productName": "Nome prodotto",
+            "liquidType": "Tipo liquido",
+            "changeKm": "Km cambio",
+            "changeKmDone": "Km cambio effettuato",
+            "changeTime": "Tempo cambio",
+            "currentChangeDate": "Data cambio attuale",
+            "path": "Percorso",
+            "title": "Titolo",
+            "cost": "Costo",
+            "date": "Data",
+            "changeDate": "Data cambio",
+            "folder": "Cartella",
+            "component": "Componente",
+            "description": "Descrizione",
+            "km": "Km"
+        },
+        "errors": {
+            "liquidName": "Inserisci il nome del prodotto.",
+            "liquidType": "Inserisci il tipo di liquido.",
+            "km": "I chilometri devono essere un numero maggiore o uguale a 0.",
+            "datePast": "La data cambio non puo essere futura.",
+            "documentTitle": "Inserisci il titolo del documento.",
+            "cost": "Il costo deve essere un numero maggiore o uguale a 0.",
+            "component": "Inserisci il componente cambiato."
+        },
+        "labels": {
+            "documents": "documenti"
+        },
+        "messages": {
+            "saved": "Salvato correttamente.",
+            "error": "Impossibile salvare.",
+            "folderLinkPending": "Documento salvato. Collegalo dalla cartella quando l'API restituisce l'id."
+        }
     }
 }

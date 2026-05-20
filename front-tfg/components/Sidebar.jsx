@@ -44,8 +44,10 @@ export default function Sidebar({ lang, router, activePage, t, userProfile, onAd
                         active={activePage === 'documents'}
                     />
                     <NavItem
+                        onClick={() => router.push(`/${lang}/dashboard/settings`)}
                         icon="settings"
                         label={t('dashboard.menu.settings', 'Settings')}
+                        active={activePage === 'settings'}
                     />
                 </nav>
             </div>

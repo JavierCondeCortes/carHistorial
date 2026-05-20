@@ -185,5 +185,73 @@
             "service": "Service Completed",
             "returned": "Returned to Active"
         }
+    },
+    "vehicleDetail": {
+        "fallbackTitle": "Vehicle",
+        "back": "Back to vehicles",
+        "emptyPlate": "No plate",
+        "quickActions": "Quick actions",
+        "actions": {
+            "addLiquid": "Add fluid",
+            "addDocument": "Add document",
+            "addMaintenance": "Add maintenance",
+            "addFolder": "Create folder",
+            "save": "Save"
+        },
+        "sections": {
+            "liquids": "Fluids",
+            "documents": "Documents",
+            "maintenance": "Maintenance",
+            "folders": "Folders"
+        },
+        "empty": {
+            "liquids": "No fluids registered",
+            "documents": "No documents registered",
+            "maintenance": "No maintenance registered",
+            "folders": "No folders created"
+        },
+        "forms": {
+            "liquid": "Add fluid",
+            "document": "Add document",
+            "maintenance": "Add maintenance",
+            "folder": "Create folder"
+        },
+        "fields": {
+            "name": "Name",
+            "type": "Type",
+            "attachment": "Attachment",
+            "productName": "Product name",
+            "liquidType": "Fluid type",
+            "changeKm": "Change km",
+            "changeKmDone": "Change km done",
+            "changeTime": "Change time",
+            "currentChangeDate": "Current change date",
+            "path": "Path",
+            "title": "Title",
+            "cost": "Cost",
+            "date": "Date",
+            "changeDate": "Change date",
+            "folder": "Folder",
+            "component": "Component",
+            "description": "Description",
+            "km": "Km"
+        },
+        "errors": {
+            "liquidName": "Enter the product name.",
+            "liquidType": "Enter the fluid type.",
+            "km": "Kilometers must be a number greater than or equal to 0.",
+            "datePast": "The change date cannot be in the future.",
+            "documentTitle": "Enter the document title.",
+            "cost": "Cost must be a number greater than or equal to 0.",
+            "component": "Enter the changed component."
+        },
+        "labels": {
+            "documents": "documents"
+        },
+        "messages": {
+            "saved": "Saved successfully.",
+            "error": "Could not save.",
+            "folderLinkPending": "Document saved. Link it from the folder when the API returns the id."
+        }
     }
 }

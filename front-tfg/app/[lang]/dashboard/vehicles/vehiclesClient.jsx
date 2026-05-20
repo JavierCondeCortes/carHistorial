@@ -1,223 +1,306 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AddVehicleModal from '@/components/AddVehicleModal';
-import { useRouter, useParams } from 'next/navigation';
-import NavItem from '@/components/NavItem';
+import DashboardShell from '@/components/dashboard/DashboardShell';
+import { useVehicles } from '@/hooks/useVehicles';
+import { getVehiclePhoto } from '@/lib/vehiclePhotos';
 
-export default function VehiclesClient({ dict }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+const VEHICLE_IMAGE = 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800';
+
+const SORT_OPTIONS = {
+    km_asc: { label: 'Km: menor a mayor', compare: (a, b) => getMileage(a) - getMileage(b) },
+    km_desc: { label: 'Km: mayor a menor', compare: (a, b) => getMileage(b) - getMileage(a) },
+    registration_desc: { label: 'Matriculacion reciente', compare: (a, b) => getDateValue(b.fecha_agregado) - getDateValue(a.fecha_agregado) },
+    registration_asc: { label: 'Matriculacion antigua', compare: (a, b) => getDateValue(a.fecha_agregado) - getDateValue(b.fecha_agregado) },
+    itv_asc: { label: 'ITV mas proxima', compare: (a, b) => getDateValue(getNextItvDate(a.ultima_fecha_itv)) - getDateValue(getNextItvDate(b.ultima_fecha_itv)) },
+};
+
+export default function VehiclesClient({ dict, lang }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const router = useRouter();
-    const params = useParams();
-    
-    // Obtenemos el idioma actual de los parámetros de la URL (ej: /es/dashboard -> es)
-    const lang = params?.lang || 'en';
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
+    const [actionError, setActionError] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('itv_asc');
+    const { vehicles, loading, error, addVehicle, editVehicle, removeVehicle } = useVehicles();
 
-    // Función de traducción con soporte para objetos anidados
-    const t = (path, fallback) => {
-        const keys = path.split('.');
-        let result = dict;
-        for (const key of keys) {
-            if (!result || result[key] === undefined) return fallback;
-            result = result[key];
-        }
-        return result;
+    const visibleVehicles = useMemo(() => {
+        const query = searchTerm.trim().toLowerCase();
+
+        return vehicles
+            .filter((vehicle) => {
+                const brand = getBrandName(vehicle).toLowerCase();
+                const model = String(vehicle.modelo || '').toLowerCase();
+                return !query || brand.includes(query) || model.includes(query) || `${brand} ${model}`.includes(query);
+            })
+            .toSorted(SORT_OPTIONS[sortBy].compare);
+    }, [searchTerm, sortBy, vehicles]);
+
+    const openAddModal = () => {
+        setSelectedVehicle(null);
+        setIsModalOpen(true);
     };
 
-    // Handler para mostrar el modal
-    const handleAddVehicleClick = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
-    const handleSubmitModal = (e) => {
-        e.preventDefault();
-        // Aquí iría la lógica para enviar el nuevo vehículo
-        handleCloseModal();
+    useEffect(() => {
+        if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('add') === '1') {
+            queueMicrotask(openAddModal);
+        }
+    }, []);
+
+    const openEditModal = (vehicle) => {
+        setSelectedVehicle(vehicle);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedVehicle(null);
+    };
+
+    const handleSaveVehicle = (payload) => (
+        selectedVehicle ? editVehicle(payload) : addVehicle(payload)
+    );
+
+    const handleDeleteVehicle = async (id) => {
+        setActionError(null);
+
+        try {
+            await removeVehicle(id);
+        } catch (err) {
+            setActionError(err.message || 'No se pudo eliminar el vehiculo.');
+        }
     };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
-
-            {/* --- SIDEBAR (Escritorio) --- */}
-            <aside className="hidden lg:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between p-4 shrink-0">
-                <div className="flex flex-col gap-6">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="bg-primary size-10 rounded-lg flex items-center justify-center text-white">
-                            <span className="material-symbols-outlined">directions_car</span>
+        <DashboardShell
+            dict={dict}
+            lang={lang}
+            activePage="vehicles"
+            contentClassName="max-w-7xl mx-auto p-4 md:p-8"
+            onAddClick={openAddModal}
+            profileName="Alex Thompson"
+            profileAvatarSeed={5}
+        >
+            {({ t, router }) => (
+                <>
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 md:mb-8">
+                        <div className="flex flex-col gap-1 md:gap-2">
+                            <h2 className="text-slate-900 dark:text-white text-2xl md:text-3xl font-black tracking-tight">
+                                {t('vehicles.title', 'Vehicle Fleet')}
+                            </h2>
+                            <p className="text-xs md:text-sm text-slate-500 font-medium">
+                                {t('vehicles.subtitle', 'Overview of all registered vehicles.')}
+                            </p>
                         </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-slate-900 dark:text-white text-base font-bold leading-none">CarHistorial</h1>
-                            <p className="text-slate-500 text-xs font-normal">{t('dashboard.sidebar.sub', 'Manage & Track')}</p>
-                        </div>
-                    </div>
-
-                    <nav className="flex flex-col gap-1">
-                        <NavItem 
-                            onClick={() => router.push(`/${lang}/dashboard`)} 
-                            icon="dashboard" 
-                            label={t('dashboard.menu.dashboard', 'Dashboard')} 
-                        />
-                        <NavItem 
-                            onClick={() => router.push(`/${lang}/dashboard/history`)}
-                            icon="history" 
-                            label={t('dashboard.menu.history', 'Service History')} 
-                        />
-                        <NavItem 
-                        onClick={() => router.push(`/${lang}/dashboard/vehicles`)}
-                            icon="garage" 
-                            label={t('dashboard.menu.vehicles', 'Vehicles')} 
-                            active
-                        />
-                        <NavItem
-                        onClick={() => router.push(`/${lang}/dashboard/documents`)}
-                            icon="description" 
-                            label={t('dashboard.menu.docs', 'Documents')}
-                        />
-                        <NavItem 
-                            icon="settings" 
-                            label={t('dashboard.menu.settings', 'Settings')} 
-                        />
-                    </nav>
-                </div>
-
-                <div className="flex flex-col gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3 px-2">
-                        <div className="bg-slate-200 dark:bg-slate-700 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=5')" }}></div>
-                        <div className="flex flex-col">
-                            <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
-                            <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
-                        </div>
-                    </div>
-                    <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2" onClick={handleAddVehicleClick}>
-                        <span className="material-symbols-outlined text-sm">add</span>
-                        {t('dashboard.actions.add', 'Add Vehicle')}
-                    </button>
-                </div>
-            </aside>
-
-            {/* --- CONTENIDO PRINCIPAL --- */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-                {/* HEADER MÓVIL */}
-                <header className="flex lg:hidden items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-primary size-8 rounded flex items-center justify-center text-white">
-                            <span className="material-symbols-outlined text-xl">directions_car</span>
-                        </div>
-                    <span className="font-black text-lg tracking-tight">CarHistorial</span>
-                    </div>
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="text-slate-600 dark:text-slate-400 p-1 active:bg-slate-100 dark:active:bg-slate-800 rounded-lg transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-2xl">{isMenuOpen ? 'close' : 'menu'}</span>
-                    </button>
-                </header>
-
-                <main className="flex-1 overflow-y-auto scroll-smooth">
-                    <div className="max-w-7xl mx-auto p-4 md:p-8">
-
-                        {/* TÍTULO Y BOTÓN AÑADIR */}
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 md:mb-8">
-                            <div className="flex flex-col gap-1 md:gap-2">
-                                <h2 className="text-slate-900 dark:text-white text-2xl md:text-3xl font-black tracking-tight">
-                                    {t('vehicles.title', 'Vehicle Fleet')}
-                                </h2>
-                                <p className="text-xs md:text-sm text-slate-500 font-medium">
-                                    {t('vehicles.subtitle', 'Overview of all registered vehicles.')}
-                                </p>
+                        <div className="flex items-center justify-between md:justify-end gap-3">
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 px-3 py-1.5 rounded-lg">
+                                <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">{t('vehicles.total_label', 'Total:')}</span>
+                                <span className="text-xs md:text-sm font-black text-primary">{visibleVehicles.length}/{vehicles.length}</span>
                             </div>
-                            <div className="flex items-center justify-between md:justify-end gap-3">
-                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 px-3 py-1.5 rounded-lg">
-                                    <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">{t('vehicles.total_label', 'Total:')}</span>
-                                    <span className="text-xs md:text-sm font-black text-primary">24</span>
-                                </div>
-                                <button className="bg-primary hover:bg-primary/90 text-white font-bold py-2 md:py-2.5 px-4 md:px-6 rounded-lg text-xs md:text-sm transition-all shadow-lg shadow-primary/20 flex items-center gap-2" onClick={handleAddVehicleClick}>
-                                    <span className="material-symbols-outlined text-sm">add</span>
-                                    {t('vehicles.add_btn', 'Add New')}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* BARRA DE BÚSQUEDA */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm mb-6 md:mb-8 overflow-hidden">
-                            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
-                                <div className="w-full md:flex-1">
-                                    <label className="flex items-center w-full bg-slate-100 dark:bg-slate-800 px-3 md:px-4 rounded-lg focus-within:ring-2 ring-primary/20 transition-all">
-                                        <span className="material-symbols-outlined text-slate-400 text-lg">search</span>
-                                        <input 
-                                            className="bg-transparent border-none focus:ring-0 text-xs md:text-sm w-full py-2 md:py-2.5 placeholder:text-slate-500" 
-                                            placeholder={t('vehicles.search_placeholder', 'Search...')} 
-                                            type="text" 
-                                        />
-                                    </label>
-                                </div>
-                                <div className="flex w-full md:w-auto gap-2">
-                                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] md:text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider transition-colors hover:bg-slate-200">
-                                        <span className="material-symbols-outlined text-sm">tune</span>
-                                        {t('vehicles.filters', 'Filters')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* GRID DE VEHÍCULOS */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {/* Ejemplo de Tarjeta de Vehículo */}
-                            <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm border-b-4 border-b-primary">
-                                <div className="relative h-44 md:h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                                    <img alt="Tesla" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" />
-                                    <div className="absolute top-3 right-3">
-                                        <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded shadow-sm backdrop-blur-sm">Active</span>
-                                    </div>
-                                </div>
-                                <div className="p-4 md:p-5">
-                                    <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-4">2021 Tesla Model 3</h3>
-                                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-800 pt-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">{t('vehicles.stats.mileage', 'Mileage')}</span>
-                                            <span className="text-sm font-bold">42,500 km</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase">{t('vehicles.stats.last_service', 'Last Service')}</span>
-                                            <span className="text-sm font-bold">Aug 12, 2023</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Botón Añadir Nuevo */}
-                            <button className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-primary/5 transition-all text-slate-400 hover:text-primary min-h-[250px]" onClick={handleAddVehicleClick}>
-                                <span className="material-symbols-outlined text-4xl">add_circle</span>
-                                <p className="font-bold">{t('vehicles.add_btn', 'Add New Vehicle')}</p>
+                            <button className="bg-primary hover:bg-primary/90 text-white font-bold py-2 md:py-2.5 px-4 md:px-6 rounded-lg text-xs md:text-sm transition-all shadow-lg shadow-primary/20 flex items-center gap-2" onClick={openAddModal}>
+                                <span className="material-symbols-outlined text-sm">add</span>
+                                {t('vehicles.add_btn', 'Add New')}
                             </button>
                         </div>
                     </div>
-                </main>
-            </div>
 
-            {/* --- MODAL AGREGAR VEHÍCULO --- */}
-            <AddVehicleModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmitModal} />
-
-            {/* --- MENÚ LATERAL MÓVIL --- */}
-            {isMenuOpen && (
-                <div className="fixed inset-0 z-[100] lg:hidden">
-                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 p-6 shadow-xl animate-in slide-in-from-right duration-300">
-                        <div className="flex flex-col gap-8">
-                            <button onClick={() => setIsMenuOpen(false)} className="self-end p-2"><span className="material-symbols-outlined">close</span></button>
-                            <nav className="flex flex-col gap-3">
-                                <NavItem 
-                                    onClick={() => { router.push(`/${lang}/dashboard`); setIsMenuOpen(false); }} 
-                                    icon="dashboard" 
-                                    label={t('dashboard.menu.dashboard', 'Dashboard')} 
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm mb-6 md:mb-8 overflow-hidden">
+                        <div className="p-3 md:p-4 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+                            <label className="flex items-center w-full bg-slate-100 dark:bg-slate-800 px-3 md:px-4 rounded-lg focus-within:ring-2 ring-primary/20 transition-all">
+                                <span className="material-symbols-outlined text-slate-400 text-lg">search</span>
+                                <input
+                                    className="bg-transparent border-none focus:ring-0 text-xs md:text-sm w-full py-2 md:py-2.5 placeholder:text-slate-500"
+                                    placeholder="Buscar por marca o modelo..."
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
                                 />
-                                <NavItem icon="garage" label={t('dashboard.menu.vehicles', 'Vehicles')} active />
-                                <NavItem icon="settings" label={t('dashboard.menu.settings', 'Settings')} />
-                            </nav>
+                            </label>
+                            <label className="w-full md:w-auto flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] md:text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                                <span className="material-symbols-outlined text-sm">sort</span>
+                                <select
+                                    className="bg-transparent border-none outline-none font-bold normal-case tracking-normal text-xs md:min-w-48"
+                                    value={sortBy}
+                                    onChange={(event) => setSortBy(event.target.value)}
+                                >
+                                    {Object.entries(SORT_OPTIONS).map(([value, option]) => (
+                                        <option key={value} value={value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </label>
                         </div>
                     </div>
-                </div>
+
+                    {error && <ErrorBanner message={error} />}
+                    {actionError && <ErrorBanner message={actionError} />}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {!loading && visibleVehicles.map((vehicle) => (
+                            <VehicleCard
+                                key={vehicle.id}
+                                vehicle={vehicle}
+                                t={t}
+                                lang={lang}
+                                router={router}
+                                onEdit={openEditModal}
+                                onDelete={handleDeleteVehicle}
+                            />
+                        ))}
+
+                        {loading && (
+                            <div className="text-sm text-slate-500 font-semibold">{t('vehicles.loading', 'Loading vehicles...')}</div>
+                        )}
+
+                        {!loading && visibleVehicles.length === 0 && (
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-sm text-slate-500 font-semibold">
+                                No hay vehiculos que coincidan con la busqueda.
+                            </div>
+                        )}
+
+                        <button className="group border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-primary/5 transition-all text-slate-400 hover:text-primary min-h-[250px]" onClick={openAddModal}>
+                            <span className="material-symbols-outlined text-4xl">add_circle</span>
+                            <p className="font-bold">{t('vehicles.add_btn', 'Add New Vehicle')}</p>
+                        </button>
+                    </div>
+
+                    <AddVehicleModal
+                        isOpen={isModalOpen}
+                        onClose={closeModal}
+                        onSuccess={handleSaveVehicle}
+                        vehicle={selectedVehicle}
+                    />
+                </>
             )}
+        </DashboardShell>
+    );
+}
+
+function VehicleCard({ vehicle, t, lang, router, onEdit, onDelete }) {
+    const brand = getBrandName(vehicle);
+    const model = vehicle.modelo || 'Vehiculo';
+    const vehicleTitle = `${brand} ${model}`.trim();
+    const mileage = getMileage(vehicle);
+    const itvStatus = getItvStatus(vehicle.ultima_fecha_itv);
+    const image = getVehiclePhoto(vehicle) || VEHICLE_IMAGE;
+
+    const handleDelete = async (event) => {
+        event.stopPropagation();
+        if (!window.confirm(`Eliminar ${vehicle.matricula || vehicleTitle}?`)) return;
+        if (!vehicle.id) throw new Error('No se puede eliminar un vehiculo sin id.');
+        await onDelete(Number(vehicle.id));
+    };
+
+    return (
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={() => router.push(`/${lang}/dashboard/vehicles/${vehicle.id}`)}
+            onKeyDown={(event) => event.key === 'Enter' && router.push(`/${lang}/dashboard/vehicles/${vehicle.id}`)}
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        >
+            <div className="relative h-40 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <img alt={vehicleTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={image} />
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-slate-950/80 to-transparent">
+                    <p className="text-white text-xl font-black leading-tight">{vehicleTitle}</p>
+                    <p className="text-slate-200 text-xs font-bold tracking-wider uppercase">{vehicle.matricula || 'Sin matricula'}</p>
+                </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                    <InfoTile icon="speed" label={t('vehicles.stats.mileage', 'Mileage')} value={`${Number(mileage).toLocaleString()} km`} />
+                    <InfoTile icon="eco" label="Combustible" value={vehicle.tipo_combustible || 'N/A'} />
+                    <InfoTile icon="verified" label="Pegatina" value={vehicle.pegatina || 'N/A'} />
+                    <InfoTile icon="event_available" label="Prox. ITV" value={formatDate(getNextItvDate(vehicle.ultima_fecha_itv))} tone={itvStatus.tone} />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 dark:bg-slate-800/60 px-3 py-2">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase text-slate-400">Estado ITV</p>
+                        <p className={`text-xs font-black ${itvStatus.className}`}>{itvStatus.label}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase text-slate-400">Ultima ITV</p>
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{formatDate(vehicle.ultima_fecha_itv)}</p>
+                    </div>
+                </div>
+
+                <div className="flex gap-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+                    <button onClick={(event) => { event.stopPropagation(); onEdit(vehicle); }} className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary">
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                        Editar
+                    </button>
+                    <button onClick={handleDelete} className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                        Eliminar
+                    </button>
+                </div>
+            </div>
         </div>
     );
+}
+
+function InfoTile({ icon, label, value, tone }) {
+    return (
+        <div className={`rounded-lg border border-slate-100 dark:border-slate-800 p-3 ${tone || 'bg-white dark:bg-slate-900'}`}>
+            <div className="flex items-center gap-1 text-slate-400 mb-1">
+                <span className="material-symbols-outlined text-sm">{icon}</span>
+                <span className="text-[9px] font-bold uppercase">{label}</span>
+            </div>
+            <p className="text-sm font-black text-slate-900 dark:text-white truncate">{value}</p>
+        </div>
+    );
+}
+
+function ErrorBanner({ message }) {
+    return (
+        <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
+            {message}
+        </div>
+    );
+}
+
+function getBrandName(vehicle) {
+    return vehicle.marca?.nombre || vehicle.marca || '';
+}
+
+function getMileage(vehicle) {
+    return Number(vehicle.km_recorridos ?? vehicle.kilometros_recorridos ?? 0);
+}
+
+function getDateValue(date) {
+    if (!date) return Number.MAX_SAFE_INTEGER;
+    const value = new Date(date).getTime();
+    return Number.isNaN(value) ? Number.MAX_SAFE_INTEGER : value;
+}
+
+function getNextItvDate(date) {
+    if (!date) return null;
+    const value = new Date(date);
+    if (Number.isNaN(value.getTime())) return null;
+    value.setFullYear(value.getFullYear() + 1);
+    return value;
+}
+
+function formatDate(date) {
+    if (!date) return 'N/A';
+    const value = new Date(date);
+    if (Number.isNaN(value.getTime())) return 'N/A';
+    return value.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getItvStatus(date) {
+    const nextItv = getNextItvDate(date);
+    const value = nextItv?.getTime();
+    if (!value) {
+        return { label: 'Sin fecha', className: 'text-slate-500', tone: 'bg-slate-50 dark:bg-slate-800/40' };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((value - today.getTime()) / 86400000);
+
+    if (diffDays < 0) return { label: 'ITV vencida', className: 'text-red-600', tone: 'bg-red-50 dark:bg-red-900/20' };
+    if (diffDays <= 30) return { label: `${diffDays} dias`, className: 'text-amber-600', tone: 'bg-amber-50 dark:bg-amber-900/20' };
+    return { label: `${diffDays} dias`, className: 'text-emerald-600', tone: 'bg-emerald-50 dark:bg-emerald-900/20' };
 }

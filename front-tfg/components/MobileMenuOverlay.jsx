@@ -57,6 +57,15 @@ export default function MobileMenuOverlay({ isOpen, onClose, lang, router, activ
                         label={t('dashboard.menu.docs', 'Documents')}
                         active={activePage === 'documents'}
                     />
+                    <NavItem
+                        onClick={() => {
+                            router.push(`/${lang}/dashboard/settings`);
+                            onClose();
+                        }}
+                        icon="settings"
+                        label={t('dashboard.menu.settings', 'Settings')}
+                        active={activePage === 'settings'}
+                    />
                 </nav>
             </div>
         </div>

@@ -1,222 +1,261 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { fetchBrands } from '@/lib/api/vehicles';
+import { getVehiclePhoto, readImageFile, saveVehiclePhoto } from '@/lib/vehiclePhotos';
+import { uploadFile } from '@/lib/uploadFile';
 import AlertItem from './AlertItem';
+import FormField from './forms/FormField';
 
-const AddVehicleModal = ({ isOpen, onClose, onSubmit, modelos = [], motorizaciones = [], pegatinas = [], tiposCombustible = [] }) => {
-    // 1. Iniciamos el estado basado en si está abierto o no
-    const [visible, setVisible] = useState(isOpen);
-    
-    // Estados para los selectores con búsqueda
-    const [marcas, setMarcas] = useState([]);
-    const [marcaInput, setMarcaInput] = useState('');
-    const [marcaId, setMarcaId] = useState('');
-    const [showMarcaList, setShowMarcaList] = useState(false);
+const EMPTY_FORM = {
+    id: '',
+    marca_id: '',
+    matricula: '',
+    modelo: '',
+    km_recorridos: '',
+    pegatina: '',
+    tipo_combustible: '',
+    ultima_fecha_itv: '',
+};
 
-    const [modeloInput, setModeloInput] = useState('');
-    const [modeloId, setModeloId] = useState('');
-    const [showModeloList, setShowModeloList] = useState(false);
+function buildForm(vehicle) {
+    if (!vehicle) return EMPTY_FORM;
 
-    // Estado para errores
+    return {
+        id: vehicle.id || '',
+        marca_id: vehicle.marca?.id || '',
+        matricula: vehicle.matricula || '',
+        modelo: vehicle.modelo || '',
+        km_recorridos: vehicle.km_recorridos ?? vehicle.kilometros_recorridos ?? '',
+        pegatina: vehicle.pegatina || '',
+        tipo_combustible: vehicle.tipo_combustible || '',
+        ultima_fecha_itv: normalizeDate(vehicle.ultima_fecha_itv),
+    };
+}
+
+export default function AddVehicleModal({ isOpen, onClose, onSuccess, vehicle = null }) {
+    const [formData, setFormData] = useState(EMPTY_FORM);
+    const [brands, setBrands] = useState([]);
+    const [photoPreview, setPhotoPreview] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [formError, setFormError] = useState(null);
-    const [fieldErrors, setFieldErrors] = useState({});
+    const isEditing = Boolean(vehicle?.id);
 
     useEffect(() => {
-        let timer;
         if (isOpen) {
-            // CARGA DE DATOS
-            fetch('http://localhost:8000/api/marcas')
-                .then(res => res.json())
-                .then(data => setMarcas(data))
-                .catch(() => setMarcas([]));
-
-            // SOLUCIÓN AL ERROR: Usamos un pequeño delay para evitar el "cascading render"
-            timer = setTimeout(() => setVisible(true), 10);
-        } else {
-            // Animación de salida: esperamos 300ms (duración de la transición) antes de desmontar
-            timer = setTimeout(() => {
-                setVisible(false);
-                // Limpiar formulario al terminar la animación de cierre
-                setMarcaInput('');
-                setMarcaId('');
-                setModeloInput('');
-                setModeloId('');
-                setFieldErrors({});
-                setFormError(null);
-            }, 300);
+            setFormData(buildForm(vehicle));
+            setPhotoPreview(getVehiclePhoto(vehicle));
+            setFormError(null);
+            fetchBrands().then(setBrands).catch(() => setBrands([]));
         }
+    }, [isOpen, vehicle]);
 
-        return () => clearTimeout(timer);
-    }, [isOpen]);
+    const updateField = (field) => (event) => {
+        setFormData((current) => ({ ...current, [field]: event.target.value }));
+    };
 
-    // Renderizado condicional: si no está abierto ni es visible (animación), no renderizamos
-    if (!visible && !isOpen) return null;
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         setFormError(null);
-        
-        const newFieldErrors = {};
-        if (!marcaId) newFieldErrors.marca = 'Selecciona una marca de la lista';
-        if (!modeloId) newFieldErrors.modelo = 'Selecciona un modelo de la lista';
-        
-        setFieldErrors(newFieldErrors);
 
-        if (Object.keys(newFieldErrors).length > 0) {
-            setFormError('Marca y Modelo son obligatorios.');
+        const photoFile = event.target.elements.photo?.files?.[0];
+        const validationError = validateVehicleForm(formData);
+        if (validationError) {
+            setFormError(validationError);
             return;
         }
 
-        onSubmit(e); 
+        setLoading(true);
+        const payload = {
+            ...(isEditing ? { id: Number(formData.id) } : {}),
+            marca: { id: Number(formData.marca_id) },
+            matricula: formData.matricula.trim().toUpperCase(),
+            modelo: formData.modelo.trim(),
+            km_recorridos: Number(formData.km_recorridos || 0),
+            pegatina: formData.pegatina.trim(),
+            tipo_combustible: formData.tipo_combustible.trim(),
+            ultima_fecha_itv: formData.ultima_fecha_itv || null,
+        };
+
+        try {
+            await onSuccess(payload);
+            const uploadedPhoto = photoFile ? await uploadFile(photoFile, 'vehicles') : null;
+            saveVehiclePhoto({ id: formData.id, matricula: payload.matricula }, uploadedPhoto?.url || photoPreview);
+            onClose();
+        } catch (error) {
+            setFormError(error.message || 'Error al guardar el vehiculo.');
+        } finally {
+            setLoading(false);
+        }
     };
 
+    if (!isOpen) return null;
+
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-            <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-6xl border border-primary/30 transition-all duration-300 flex ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-                
-                {/* Columna izquierda: imagen */}
-                <div className="hidden md:flex flex-col items-center justify-center w-1/3 pr-8">
-                    <div className="w-full h-full max-h-[500px] rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-primary/20">
-                        <img src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800" alt="Vehículo" className="object-cover w-full h-full" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-3xl border border-primary/30">
+                <div className="flex items-start justify-between gap-4 mb-6">
+                    <div>
+                        <h2 className="text-2xl font-black text-primary uppercase tracking-tight">
+                            {isEditing ? 'Editar vehiculo' : 'Agregar vehiculo'}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">Datos asociados a tu usuario autenticado.</p>
                     </div>
+                    <button type="button" onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
                 </div>
 
-                {/* Columna derecha: formulario */}
-                <div className="w-full md:w-2/3">
-                    <h2 className="text-2xl font-black mb-6 text-primary uppercase tracking-tight">Registrar Vehículo</h2>
-                    
-                    <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {formError && (
-                            <div className="col-span-full">
-                                <AlertItem type="error" message={formError} />
-                            </div>
-                        )}
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formError && <div className="md:col-span-2"><AlertItem type="error" message={formError} /></div>}
 
-                        {/* MARCA */}
-                        <div className="flex flex-col gap-1 relative">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Marca *</span>
-                            <input
-                                className={`border rounded-lg p-2.5 text-sm outline-none transition-all ${fieldErrors.marca ? 'border-red-500' : 'border-primary/30 focus:border-primary'}`}
-                                placeholder="Buscar marca..."
-                                value={marcaInput}
-                                onFocus={() => setShowMarcaList(true)}
-                                onBlur={() => setTimeout(() => setShowMarcaList(false), 200)}
-                                onChange={e => { setMarcaInput(e.target.value); setMarcaId(''); }}
-                            />
-                            {showMarcaList && (
-                                <div className="absolute top-full left-0 w-full bg-white dark:bg-slate-800 border shadow-2xl z-50 max-h-40 overflow-y-auto rounded-b-lg">
-                                    {marcas.filter(m => m.nombre.toLowerCase().includes(marcaInput.toLowerCase())).map(m => (
-                                        <div key={m.id} className="p-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setMarcaId(m.id); setMarcaInput(m.nombre); }}>
-                                            {m.nombre}
-                                        </div>
-                                    ))}
-                                </div>
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 items-center rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                        <div className="aspect-video rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
+                            {photoPreview ? (
+                                <img src={photoPreview} alt="Vista previa" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="material-symbols-outlined text-4xl text-slate-400">directions_car</span>
                             )}
-                            <input type="hidden" name="marca_id" value={marcaId} />
                         </div>
-
-                        {/* MODELO */}
-                        <div className="flex flex-col gap-1 relative">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Modelo *</span>
+                        <FormField label="Foto del coche">
                             <input
-                                className={`border rounded-lg p-2.5 text-sm outline-none transition-all ${!marcaId ? 'bg-slate-50 cursor-not-allowed opacity-50' : ''} ${fieldErrors.modelo ? 'border-red-500' : 'border-primary/30 focus:border-primary'}`}
-                                placeholder={marcaId ? "Buscar modelo..." : "Selecciona marca primero"}
-                                value={modeloInput}
-                                disabled={!marcaId}
-                                onFocus={() => setShowModeloList(true)}
-                                onBlur={() => setTimeout(() => setShowModeloList(false), 200)}
-                                onChange={e => { setModeloInput(e.target.value); setModeloId(''); }}
+                                name="photo"
+                                type="file"
+                                accept="image/*"
+                                onChange={async (event) => setPhotoPreview(await readImageFile(event.target.files?.[0]))}
+                                className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-bold file:text-white"
                             />
-                            {showModeloList && marcaId && (
-                                <div className="absolute top-full left-0 w-full bg-white dark:bg-slate-800 border shadow-2xl z-50 max-h-40 overflow-y-auto rounded-b-lg">
-                                    {modelos
-                                        .filter(m => m.marca_id === Number(marcaId) && m.nombre.toLowerCase().includes(modeloInput.toLowerCase()))
-                                        .map(m => (
-                                            <div key={m.id} className="p-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setModeloId(m.id); setModeloInput(m.nombre); }}>
-                                                {m.nombre}
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            )}
-                            <input type="hidden" name="modelo_id" value={modeloId} />
-                        </div>
+                        </FormField>
+                    </div>
 
-                        {/* COMBUSTIBLE */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Combustible</span>
-                            <select name="tipo_combustible_id" className="border border-primary/30 rounded-lg p-2.5 text-sm">
-                                <option value="">Seleccionar...</option>
-                                {tiposCombustible.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
-                            </select>
-                        </div>
+                    <FormField label="Marca">
+                        <select
+                            name="marca_id"
+                            required
+                            value={formData.marca_id}
+                            onChange={updateField('marca_id')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm"
+                        >
+                            <option value="">Seleccionar marca...</option>
+                            {brands.map((brand) => (
+                                <option key={brand.id} value={brand.id}>{brand.nombre}</option>
+                            ))}
+                        </select>
+                    </FormField>
 
-                        {/* MOTORIZACIÓN */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Motorización</span>
-                            <select name="motorizacion" className="border border-primary/30 rounded-lg p-2.5 text-sm">
-                                <option value="">Seleccionar...</option>
-                                {motorizaciones.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-                            </select>
-                        </div>
+                    <FormField label="Matricula">
+                        <input
+                            name="matricula"
+                            required
+                            disabled={isEditing}
+                            value={formData.matricula}
+                            onChange={updateField('matricula')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm uppercase disabled:bg-slate-100 disabled:text-slate-500"
+                            placeholder="1234ABC"
+                        />
+                    </FormField>
 
-                        {/* PEGATINA */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Pegatina</span>
-                            <select name="pegatina_id" className="border border-primary/30 rounded-lg p-2.5 text-sm">
-                                <option value="">Seleccionar...</option>
-                                {pegatinas.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                            </select>
-                        </div>
+                    <FormField label="Modelo">
+                        <input
+                            name="modelo"
+                            required
+                            value={formData.modelo}
+                            onChange={updateField('modelo')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm"
+                            placeholder="Seat Leon"
+                        />
+                    </FormField>
 
-                        {/* COLOR */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Color</span>
-                            <input name="color" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="Ej: Blanco" />
-                        </div>
+                    <FormField label="Kilometros recorridos">
+                        <input
+                            name="km_recorridos"
+                            type="number"
+                            min="0"
+                            value={formData.km_recorridos}
+                            onChange={updateField('km_recorridos')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm"
+                            placeholder="0"
+                        />
+                    </FormField>
 
-                        {/* FECHA MATRICULACION */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Matriculación</span>
-                            <input name="fecha_primera_matriculacion" type="date" className="border border-primary/30 rounded-lg p-2.5 text-sm" />
-                        </div>
+                    <FormField label="Pegatina">
+                        <input
+                            name="pegatina"
+                            value={formData.pegatina}
+                            onChange={updateField('pegatina')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm"
+                            placeholder="C, ECO, 0..."
+                        />
+                    </FormField>
 
-                        {/* PLAZAS */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Plazas</span>
-                            <input name="plazas" type="number" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="5" />
-                        </div>
+                    <FormField label="Tipo combustible">
+                        <select
+                            name="tipo_combustible"
+                            required
+                            value={formData.tipo_combustible}
+                            onChange={updateField('tipo_combustible')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm"
+                        >
+                            <option value="">Seleccionar combustible...</option>
+                            <option value="diesel">Diesel</option>
+                            <option value="gasolina">Gasolina</option>
+                            <option value="electrico">Electrico</option>
+                            <option value="hibrido">Hibrido</option>
+                            <option value="gas">Gas</option>
+                        </select>
+                    </FormField>
 
-                        {/* KM */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Kilómetros</span>
-                            <input name="kilometros_recorridos" type="number" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="0" />
-                        </div>
+                    <FormField label="Fecha ultima ITV">
+                        <input
+                            name="ultima_fecha_itv"
+                            type="date"
+                            max={new Date().toISOString().slice(0, 10)}
+                            value={formData.ultima_fecha_itv}
+                            onChange={updateField('ultima_fecha_itv')}
+                            className="border border-primary/30 rounded-lg p-2.5 text-sm"
+                        />
+                    </FormField>
 
-                        {/* MATRÍCULA */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Matrícula</span>
-                            <input name="matricula" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="1234ABC" />
-                        </div>
-
-                        {/* BASTIDOR */}
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold text-[10px] uppercase text-slate-400">Nº Bastidor</span>
-                            <input name="numero_bastidor" className="border border-primary/30 rounded-lg p-2.5 text-sm" placeholder="VIN..." />
-                        </div>
-
-                        {/* BOTONES */}
-                        <div className="col-span-full flex gap-3 justify-end mt-6">
-                            <button type="button" onClick={onClose} className="px-6 py-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors uppercase">
-                                Cancelar
-                            </button>
-                            <button type="submit" className="bg-primary text-white px-10 py-2 rounded-lg font-black text-sm shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all uppercase">
-                                Guardar Vehículo
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div className="md:col-span-2 flex gap-3 justify-end mt-6">
+                        <button type="button" onClick={onClose} className="px-6 py-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-colors uppercase">
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-primary text-white px-8 py-3 rounded-xl font-black text-sm shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all uppercase tracking-wider disabled:opacity-50"
+                        >
+                            {loading ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Agregar vehiculo'}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
-};
+}
 
-export default AddVehicleModal;
+function normalizeDate(date) {
+    if (!date) return '';
+    const parsed = new Date(date);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10);
+}
+
+function validateVehicleForm(formData) {
+    if (!formData.marca_id) return 'Selecciona la marca del vehiculo.';
+    if (!formData.matricula.trim()) return 'Indica la matricula del vehiculo.';
+    if (!formData.modelo.trim()) return 'Indica el modelo del vehiculo.';
+    if (!formData.tipo_combustible) return 'Selecciona el tipo de combustible.';
+
+    const km = Number(formData.km_recorridos || 0);
+    if (Number.isNaN(km) || km < 0) return 'Los kilometros recorridos deben ser un numero mayor o igual a 0.';
+
+    if (formData.ultima_fecha_itv) {
+        const itvDate = new Date(formData.ultima_fecha_itv);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (Number.isNaN(itvDate.getTime())) return 'La fecha de ultima ITV no es valida.';
+        if (itvDate > today) return 'La fecha de ultima ITV no puede ser posterior a la fecha actual.';
+    }
+
+    return null;
+}

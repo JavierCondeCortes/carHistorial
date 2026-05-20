@@ -1,208 +1,260 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslation } from '@/lib/useTranslation';
-import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
-import MobileMenuOverlay from '@/components/MobileMenuOverlay';
+import React, { useEffect, useMemo, useState } from 'react';
+import DashboardShell from '@/components/dashboard/DashboardShell';
+import { useVehicles } from '@/hooks/useVehicles';
+import { vehicleResourcesApi } from '@/lib/api/vehicleResources';
 
 export default function DashboardClient({ dict, lang }) {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const router = useRouter();
-    const t = useTranslation(dict);
+    const { vehicles, loading: loadingVehicles } = useVehicles();
+    const [reports, setReports] = useState([]);
+    const [maintenances, setMaintenances] = useState([]);
+    const [loadingResources, setLoadingResources] = useState(true);
+    const [periodMode, setPeriodMode] = useState('month');
+    const [periodDate, setPeriodDate] = useState(new Date().toISOString().slice(0, 7));
+    const [year, setYear] = useState(String(new Date().getFullYear()));
 
-    const userProfile = (
-        <div className="flex items-center gap-3 px-2">
-            <div className="bg-slate-200 dark:bg-slate-700 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=5')" }}></div>
-            <div className="flex flex-col">
-                <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
-                <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role', 'Fleet Manager')}</p>
-            </div>
-        </div>
-    );
+    useEffect(() => {
+        async function loadResources() {
+            setLoadingResources(true);
+            try {
+                const [nextReports, nextMaintenances] = await Promise.all([
+                    vehicleResourcesApi.listAllReports(),
+                    vehicleResourcesApi.listAllMaintenances(),
+                ]);
+                setReports(Array.isArray(nextReports) ? nextReports : []);
+                setMaintenances(Array.isArray(nextMaintenances) ? nextMaintenances : []);
+            } finally {
+                setLoadingResources(false);
+            }
+        }
+        loadResources();
+    }, []);
+
+    const expenses = useMemo(() => buildExpenses(reports, maintenances), [maintenances, reports]);
+    const visibleExpenses = useMemo(() => filterExpenses(expenses, periodMode, periodMode === 'month' ? periodDate : year), [expenses, periodDate, periodMode, year]);
+    const chartData = useMemo(() => buildChartData(visibleExpenses, periodMode, periodMode === 'month' ? periodDate : year), [periodDate, periodMode, visibleExpenses, year]);
+    const totalExpenses = visibleExpenses.reduce((sum, item) => sum + item.cost, 0);
+    const upcomingItv = vehicles.filter((vehicle) => getDaysUntil(vehicle.ultima_fecha_itv) <= 30).length;
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
-            <Sidebar 
-                lang={lang}
-                router={router}
-                activePage="dashboard"
-                t={t}
-                userProfile={userProfile}
-            />
-
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <MobileHeader 
-                    onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    isMenuOpen={isMobileMenuOpen}
-                />
-
-                <main className="flex-1 overflow-y-auto scroll-smooth p-4 lg:p-8">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-8">
-                            <div>
-                                <h2 className="text-slate-900 dark:text-white text-2xl lg:text-3xl font-black tracking-tight">{t('dashboard.header.title', 'Fleet Overview')}</h2>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('dashboard.header.subtitle', 'Real-time status and health across 42 vehicles')}</p>
-                            </div>
-                            <div className="flex gap-2 lg:gap-3">
-                                <button className="flex-1 lg:flex-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold py-2 px-4 rounded-lg text-xs lg:text-sm flex items-center justify-center gap-2">
-                                    <span className="material-symbols-outlined text-sm">calendar_today</span> {t('dashboard.filters.30days', '30 Days')}
-                                </button>
-                                <button className="flex-1 lg:flex-none bg-primary text-white font-bold py-2 px-4 rounded-lg text-xs lg:text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                                    <span className="material-symbols-outlined text-sm">download</span> {t('dashboard.actions.export', 'Export')}
-                                </button>
-                            </div>
+        <DashboardShell dict={dict} lang={lang} activePage="dashboard" contentClassName="max-w-7xl mx-auto p-4 lg:p-8">
+            {({ t }) => (
+                <div className="space-y-6">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                        <div>
+                            <h2 className="text-slate-900 dark:text-white text-3xl font-black tracking-tight">{t('dashboard.header.title', 'Panel principal')}</h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{vehicles.length} vehiculos, {reports.length} documentos y {maintenances.length} mantenimientos registrados.</p>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-bold">{t('dashboard.alerts.title', 'Active Alerts')}</h3>
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-600">{t('dashboard.alerts.critical', '4 Critical')}</span>
-                                </div>
-                                <div className="space-y-3">
-                                    <AlertItem type="warning" title={t('dashboard.alerts.brake', 'Brake Service Overdue')} subtitle="Vehicle #1042 • Van" />
-                                    <AlertItem type="error" title={t('dashboard.alerts.engine', 'Engine Malfunction')} subtitle="Vehicle #2201 • Tesla" />
-                                </div>
-                                <button className="w-full mt-4 text-primary text-xs font-bold flex items-center justify-center gap-1 hover:underline">
-                                    {t('dashboard.alerts.view_all', 'View All')} <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                                </button>
-                            </div>
-
-                            <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-                                <div className="flex justify-between mb-6">
-                                    <h3 className="font-bold">{t('dashboard.expenses.title', 'Monthly Expenses')}</h3>
-                                    <div className="text-right">
-                                        <p className="text-xl font-black">$12,840</p>
-                                        <p className="text-emerald-500 text-[10px] font-bold">{t('dashboard.expenses.trend', '+12% vs last month')}</p>
-                                    </div>
-                                </div>
-                                <ChartPlaceholder />
-                            </div>
-
-                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-                                <h3 className="font-bold mb-6">{t('dashboard.distribution.title', 'Vehicle Distribution')}</h3>
-                                <div className="flex flex-col items-center">
-                                    <DonutChart value={42} label={t('dashboard.distribution.total', 'Total')} />
-                                    <div className="w-full space-y-2 mt-4">
-                                        <StatRow color="bg-emerald-500" label={t('dashboard.distribution.active', 'Active')} value="32 (75%)" />
-                                        <StatRow color="bg-amber-400" label={t('dashboard.distribution.service', 'In Service')} value="6 (15%)" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-                                <h3 className="font-bold mb-6">{t('dashboard.activity.title', 'Recent Activity')}</h3>
-                                <div className="space-y-6">
-                                    <ActivityItem icon="build" color="text-blue-600" title={t('dashboard.activity.service', 'Service Completed')} desc="Brake pads replaced for #1042" time="Today at 11:42 AM" />
-                                    <ActivityItem icon="check_circle" color="text-emerald-600" title={t('dashboard.activity.returned', 'Returned to Active')} desc="#2201 back on road" time="Yesterday at 4:30 PM" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <MiniStat icon="speed" label={t('dashboard.stats.mileage', 'Avg. Mileage')} value="1,240 km" />
-                            <MiniStat icon="health_metrics" label={t('dashboard.stats.health', 'Health Score')} value="88%" />
-                            <MiniStat icon="description" label={t('dashboard.stats.docs', 'Renewal Docs')} value={t('dashboard.stats.pending', '2 Pending')} amber />
-                            <MiniStat icon="people" label={t('dashboard.stats.drivers', 'Active Drivers')} value="38" />
+                        <div className="flex flex-wrap gap-2">
+                            <button onClick={() => setPeriodMode('month')} className={periodButton(periodMode === 'month')}>Mes</button>
+                            <button onClick={() => setPeriodMode('year')} className={periodButton(periodMode === 'year')}>Ano</button>
+                            {periodMode === 'month' ? (
+                                <input type="month" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold" />
+                            ) : (
+                                <input type="number" value={year} onChange={(e) => setYear(e.target.value)} className="w-28 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold" />
+                            )}
+                            <button onClick={() => exportExpenses(visibleExpenses, periodMode)} className="bg-primary text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center gap-2 shadow-lg shadow-primary/20">
+                                <span className="material-symbols-outlined text-sm">download</span>
+                                {t('dashboard.actions.export', 'Exportar')}
+                            </button>
                         </div>
                     </div>
-                </main>
-            </div>
-            <MobileMenuOverlay 
-                isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
-                lang={lang}
-                router={router}
-                activePage="dashboard"
-                t={t}
-            />
-        </div>
-    );
-}
 
-// --- SUB-COMPONENTES AUXILIARES ---
-// AlertItem, MiniStat, StatRow, ActivityItem, ChartPlaceholder, DonutChart permanecen igual
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <MiniStat icon="garage" label="Vehiculos" value={loadingVehicles ? '...' : vehicles.length} />
+                        <MiniStat icon="description" label="Documentos" value={loadingResources ? '...' : reports.length} />
+                        <MiniStat icon="build" label="Mantenimientos" value={loadingResources ? '...' : maintenances.length} />
+                        <MiniStat icon="event_available" label="ITV proxima" value={upcomingItv} amber />
+                    </div>
 
-function AlertItem({ type, title, subtitle }) {
-    const colors = type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100' : 'bg-red-50 dark:bg-red-900/10 border-red-100';
-    const iconColor = type === 'warning' ? 'text-amber-500' : 'text-red-500';
-    return (
-        <div className={`flex items-start gap-3 p-3 rounded-lg border ${colors}`}>
-            <span className={`material-symbols-outlined ${iconColor}`}>
-                {type === 'warning' ? 'warning' : 'error'}
-            </span>
-            <div>
-                <p className="text-sm font-bold">{title}</p>
-                <p className="text-[10px] text-slate-500">{subtitle}</p>
-            </div>
-        </div>
+                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+                        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                            <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+                                <div>
+                                    <h3 className="font-black text-lg">Gastos {periodMode === 'month' ? 'del mes' : 'del ano'}</h3>
+                                    <p className="text-sm text-slate-500">Informes y mantenimientos de todos los coches.</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-3xl font-black">{formatCurrency(totalExpenses)}</p>
+                                    <p className="text-xs font-bold text-slate-400">{visibleExpenses.length} registros</p>
+                                </div>
+                            </div>
+                            <ExpenseChart data={chartData} />
+                        </section>
+
+                        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                            <h3 className="font-black text-lg mb-4">Distribucion</h3>
+                            <DonutChart total={vehicles.length} warning={upcomingItv} />
+                            <div className="mt-6 space-y-2">
+                                <StatRow color="bg-emerald-500" label="Sin ITV cercana" value={Math.max(vehicles.length - upcomingItv, 0)} />
+                                <StatRow color="bg-amber-400" label="ITV proxima o vencida" value={upcomingItv} />
+                            </div>
+                        </section>
+                    </div>
+
+                    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+                        <h3 className="font-black text-lg mb-4">Ultimos gastos</h3>
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {visibleExpenses.slice(0, 8).map((expense) => <ExpenseRow key={`${expense.type}-${expense.id}`} expense={expense} />)}
+                            {visibleExpenses.length === 0 && <p className="text-sm text-slate-500">No hay gastos en este periodo.</p>}
+                        </div>
+                    </section>
+                </div>
+            )}
+        </DashboardShell>
     );
 }
 
 function MiniStat({ icon, label, value, amber = false }) {
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-3">
-            <div className="bg-slate-100 dark:bg-slate-800 size-8 lg:size-10 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
-                <span className="material-symbols-outlined text-base lg:text-xl">{icon}</span>
+            <div className="bg-slate-100 dark:bg-slate-800 size-10 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
+                <span className="material-symbols-outlined text-xl">{icon}</span>
             </div>
             <div>
-                <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase">{label}</p>
-                <p className={`text-sm lg:text-lg font-bold ${amber ? 'text-amber-500' : ''}`}>{value}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">{label}</p>
+                <p className={`text-xl font-black ${amber ? 'text-amber-500' : ''}`}>{value}</p>
+            </div>
+        </div>
+    );
+}
+
+function ExpenseChart({ data }) {
+    const max = Math.max(...data.map((item) => item.value), 1);
+    const width = 900;
+    const height = 260;
+    const points = data.map((item, index) => {
+        const x = data.length === 1 ? width / 2 : (index / (data.length - 1)) * width;
+        const y = height - (item.value / max) * (height - 40) - 20;
+        return { ...item, x, y };
+    });
+    const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+    const area = `${path} L ${width} ${height} L 0 ${height} Z`;
+
+    return (
+        <div className="h-80">
+            <svg viewBox={`0 0 ${width} ${height + 42}`} className="h-full w-full overflow-visible" preserveAspectRatio="none">
+                <path d={area} fill="rgba(19,91,236,.12)" />
+                <path d={path} fill="none" stroke="#135bec" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                {points.map((point, index) => (
+                    <g key={point.label}>
+                        <circle cx={point.x} cy={point.y} r="5" fill="#135bec" />
+                        {(index === 0 || index === points.length - 1 || index % Math.ceil(points.length / 8) === 0) && <text x={point.x} y={height + 24} textAnchor="middle" className="fill-slate-400 text-[20px] font-bold">{point.label}</text>}
+                    </g>
+                ))}
+            </svg>
+        </div>
+    );
+}
+
+function DonutChart({ total, warning }) {
+    const safeTotal = Math.max(total, 1);
+    const warningValue = Math.min((warning / safeTotal) * 100, 100);
+    const activeValue = 100 - warningValue;
+    return (
+        <div className="relative mx-auto size-44">
+            <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+                <circle className="text-slate-100 dark:text-slate-800" cx="18" cy="18" fill="transparent" r="15.9" stroke="currentColor" strokeWidth="4" />
+                <circle className="text-emerald-500" cx="18" cy="18" fill="transparent" r="15.9" stroke="currentColor" strokeDasharray={`${activeValue} 100`} strokeWidth="4" />
+                <circle className="text-amber-400" cx="18" cy="18" fill="transparent" r="15.9" stroke="currentColor" strokeDasharray={`${warningValue} 100`} strokeDashoffset={`-${activeValue}`} strokeWidth="4" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-black">{total}</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase">Vehiculos</span>
             </div>
         </div>
     );
 }
 
 function StatRow({ color, label, value }) {
+    return <div className="flex items-center justify-between"><div className="flex items-center gap-2"><div className={`size-2 rounded-full ${color}`} /><span className="text-xs text-slate-500">{label}</span></div><span className="text-xs font-bold">{value}</span></div>;
+}
+
+function ExpenseRow({ expense }) {
     return (
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <div className={`size-2 rounded-full ${color}`}></div>
-                <span className="text-xs text-slate-500">{label}</span>
+        <div className="py-3 grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_130px_110px_120px] gap-2 md:gap-4 items-center">
+            <div className="flex items-center gap-3 min-w-0">
+                <span className="material-symbols-outlined text-primary">{expense.type === 'mantenimiento' ? 'build' : expense.type === 'itv' ? 'verified' : 'description'}</span>
+                <p className="text-sm font-black text-slate-900 dark:text-white truncate">{expense.name}</p>
             </div>
-            <span className="text-xs font-bold">{value}</span>
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-300 truncate">{expense.vehicleName}</p>
+            <span className="w-fit rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black uppercase text-primary">{expense.type}</span>
+            <p className="text-sm font-black text-slate-900 dark:text-white md:text-right">{formatCurrency(expense.cost)}</p>
+            <p className="text-sm text-slate-500 md:text-right">{formatDate(expense.date)}</p>
         </div>
     );
 }
 
-function ActivityItem({ icon, color, title, desc, time }) {
-    return (
-        <div className="flex gap-4">
-            <div className={`size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0`}>
-                <span className={`material-symbols-outlined ${color} text-base`}>{icon}</span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-                <p className="text-sm font-semibold">{title}</p>
-                <p className="text-xs text-slate-500">{desc}</p>
-                <span className="text-[10px] text-slate-400">{time}</span>
-            </div>
-        </div>
-    );
+function buildExpenses(reports, maintenances) {
+    return [
+        ...reports.map((item) => ({ id: item.id, type: /^itv\b/i.test(item.nombre || '') ? 'itv' : 'informe', name: item.nombre, vehicleName: getVehicleName(item.vehiculo), cost: Number(item.costo || 0), date: item.fecha_informe })),
+        ...maintenances.map((item) => ({ id: item.id, type: 'mantenimiento', name: item.componente_cambiado, vehicleName: getVehicleName(item.vehiculo), cost: Number(item.costo || 0), date: item.fecha_cambio })),
+    ].filter((item) => item.date).toSorted((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-function ChartPlaceholder() {
-    return (
-        <div className="h-[150px] w-full relative">
-            <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 400 200">
-                <path d="M 0 160 Q 40 140 80 150 T 160 100 T 240 130 T 320 80 T 400 40" fill="none" stroke="#135bec" strokeWidth="3" />
-            </svg>
-        </div>
-    );
+function getVehicleName(vehicle) {
+    if (!vehicle) return 'N/A';
+    const brand = vehicle.marca?.nombre || vehicle.marca || '';
+    return `${brand} ${vehicle.modelo || ''}`.trim() || vehicle.matricula || 'Vehiculo';
 }
 
-function DonutChart({ value, label }) {
-    return (
-        <div className="relative size-32 lg:size-40">
-            <svg className="size-full -rotate-90" viewBox="0 0 36 36">
-                <circle className="text-emerald-500" cx="18" cy="18" fill="transparent" r="15.9" stroke="currentColor" strokeDasharray="75 100" strokeWidth="4"></circle>
-                <circle className="text-amber-400" cx="18" cy="18" fill="transparent" r="15.9" stroke="currentColor" strokeDasharray="15 100" strokeDashoffset="-75" strokeWidth="4"></circle>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black">{value}</span>
-                <span className="text-[10px] text-slate-500 font-bold uppercase">{label}</span>
-            </div>
-        </div>
-    );
+function filterExpenses(expenses, mode, value) {
+    return expenses.filter((expense) => {
+        const date = new Date(expense.date);
+        if (Number.isNaN(date.getTime())) return false;
+        if (mode === 'year') return String(date.getFullYear()) === String(value);
+        return date.toISOString().slice(0, 7) === value;
+    });
+}
+
+function buildChartData(expenses, mode, value) {
+    if (mode === 'year') {
+        return Array.from({ length: 12 }, (_, index) => {
+            const month = String(index + 1).padStart(2, '0');
+            return { label: month, value: expenses.filter((expense) => new Date(expense.date).getMonth() === index).reduce((sum, item) => sum + item.cost, 0) };
+        });
+    }
+
+    const [year, month] = value.split('-').map(Number);
+    const days = new Date(year, month, 0).getDate();
+    return Array.from({ length: days }, (_, index) => {
+        const day = index + 1;
+        return { label: String(day), value: expenses.filter((expense) => new Date(expense.date).getDate() === day).reduce((sum, item) => sum + item.cost, 0) };
+    });
+}
+
+function exportExpenses(expenses, mode) {
+    const rows = [['tipo', 'nombre', 'fecha', 'coste'], ...expenses.map((expense) => [expense.type, expense.name, expense.date, expense.cost])];
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `gastos-${mode}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function getDaysUntil(date) {
+    if (!date) return Number.MAX_SAFE_INTEGER;
+    const target = new Date(date);
+    if (Number.isNaN(target.getTime())) return Number.MAX_SAFE_INTEGER;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Math.ceil((target - today) / 86400000);
+}
+
+function periodButton(active) {
+    return `rounded-lg px-4 py-2 text-sm font-bold ${active ? 'bg-primary text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'}`;
+}
+
+function formatCurrency(value) {
+    return `${Number(value || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`;
+}
+
+function formatDate(date) {
+    if (!date) return 'N/A';
+    const parsed = new Date(date);
+    return Number.isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString('es-ES');
 }

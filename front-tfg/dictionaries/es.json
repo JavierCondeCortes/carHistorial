@@ -186,5 +186,73 @@
             "service": "Servicio Completado",
             "returned": "Regresó a Activo"
         }
+    },
+    "vehicleDetail": {
+        "fallbackTitle": "Vehiculo",
+        "back": "Volver a vehiculos",
+        "emptyPlate": "Sin matricula",
+        "quickActions": "Acciones rapidas",
+        "actions": {
+            "addLiquid": "Agregar liquido",
+            "addDocument": "Agregar documento",
+            "addMaintenance": "Agregar mantenimiento",
+            "addFolder": "Crear carpeta",
+            "save": "Guardar"
+        },
+        "sections": {
+            "liquids": "Liquidos",
+            "documents": "Documentos",
+            "maintenance": "Mantenimientos",
+            "folders": "Carpetas"
+        },
+        "empty": {
+            "liquids": "Sin liquidos registrados",
+            "documents": "Sin documentos registrados",
+            "maintenance": "Sin mantenimientos registrados",
+            "folders": "Sin carpetas creadas"
+        },
+        "forms": {
+            "liquid": "Agregar liquido",
+            "document": "Agregar documento",
+            "maintenance": "Agregar mantenimiento",
+            "folder": "Crear carpeta"
+        },
+        "fields": {
+            "name": "Nombre",
+            "type": "Tipo",
+            "attachment": "Adjunto",
+            "productName": "Nombre producto",
+            "liquidType": "Tipo liquido",
+            "changeKm": "Km cambio",
+            "changeKmDone": "Km cambio realizado",
+            "changeTime": "Tiempo cambio",
+            "currentChangeDate": "Fecha cambio actual",
+            "path": "Ruta",
+            "title": "Titulo",
+            "cost": "Coste",
+            "date": "Fecha",
+            "changeDate": "Fecha cambio",
+            "folder": "Carpeta",
+            "component": "Componente",
+            "description": "Descripcion",
+            "km": "Km"
+        },
+        "errors": {
+            "liquidName": "Indica el nombre del producto.",
+            "liquidType": "Indica el tipo de liquido.",
+            "km": "Los kilometros deben ser un numero mayor o igual a 0.",
+            "datePast": "La fecha de cambio no puede ser futura.",
+            "documentTitle": "Indica el titulo del documento.",
+            "cost": "El coste debe ser un numero mayor o igual a 0.",
+            "component": "Indica el componente cambiado."
+        },
+        "labels": {
+            "documents": "documentos"
+        },
+        "messages": {
+            "saved": "Guardado correctamente.",
+            "error": "No se pudo guardar.",
+            "folderLinkPending": "Documento guardado. Vinculalo desde la carpeta cuando la API devuelva el id."
+        }
     }
 }

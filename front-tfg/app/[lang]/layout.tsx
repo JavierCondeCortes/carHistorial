@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/context/AuthContext";
-import { Inter } from "next/font/google"; // Usamos Inter como pedía tu script
 import "./../globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "AutoMaint - Car Historial",
@@ -21,16 +15,13 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        {/* Importante para los iconos */}
-        <link 
-          rel="stylesheet" 
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" 
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=optional"
         />
       </head>
-      <body className={`${inter.variable} antialiased select-none`}>
-        <AuthProvider>
-        {children}
-        </AuthProvider>
+      <body className="antialiased select-none">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

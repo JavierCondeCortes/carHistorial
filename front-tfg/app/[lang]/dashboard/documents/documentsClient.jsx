@@ -1,216 +1,455 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useTranslation } from '@/lib/useTranslation';
-import Sidebar from '@/components/Sidebar';
-import MobileHeader from '@/components/MobileHeader';
-import MobileMenuOverlay from '@/components/MobileMenuOverlay';
+import React, { useEffect, useMemo, useState } from 'react';
+import DashboardShell from '@/components/dashboard/DashboardShell';
+import { useVehicles } from '@/hooks/useVehicles';
+import { vehicleResourcesApi } from '@/lib/api/vehicleResources';
+import { uploadFile } from '@/lib/uploadFile';
+import { assignResourceToFolder, countFolderLinks, getFolderLinks } from '@/lib/resourceFolders';
+import { getResourceAttachment } from '@/lib/resourceAttachments';
 
-export default function VehicleDocumentsVault({ dict }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const router = useRouter();
-    const params = useParams();
-    const lang = params?.lang || 'es';
-    const t = useTranslation(dict);
+export default function VehicleDocumentsVault({ dict, lang }) {
+    const { vehicles } = useVehicles();
+    const [documents, setDocuments] = useState([]);
+    const [folders, setFolders] = useState([]);
+    const [liquids, setLiquids] = useState([]);
+    const [maintenances, setMaintenances] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [query, setQuery] = useState('');
+    const [folderFilter, setFolderFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [activeDocument, setActiveDocument] = useState(null);
+    const [folderForm, setFolderForm] = useState(null);
+    const [resourceFolderForm, setResourceFolderForm] = useState(false);
 
-    const userProfile = (
-        <div className="flex items-center gap-3 px-2">
-            <div className="bg-slate-200 size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://i.pravatar.cc/150?u=9')" }}></div>
-            <div className="flex flex-col">
-                <p className="text-slate-900 dark:text-white text-sm font-semibold">Alex Thompson</p>
-                <p className="text-slate-500 text-xs">{t('dashboard.sidebar.role')}</p>
-            </div>
-        </div>
-    );
+    const loadData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const [nextDocuments, nextFoldersRaw, nextLiquids, nextMaintenances] = await Promise.all([
+                vehicleResourcesApi.listAllReports(),
+                vehicleResourcesApi.listFolders(),
+                vehicleResourcesApi.listAllLiquids(),
+                vehicleResourcesApi.listAllMaintenances(),
+            ]);
+            const baseFolders = Array.isArray(nextFoldersRaw) ? nextFoldersRaw : [];
+            const nextFolders = await Promise.all(baseFolders.map(async (folder) => {
+                try {
+                    return await vehicleResourcesApi.getFolderContent(folder.id);
+                } catch {
+                    return folder;
+                }
+            }));
+            setDocuments(Array.isArray(nextDocuments) ? nextDocuments : []);
+            setFolders(nextFolders);
+            setLiquids(Array.isArray(nextLiquids) ? nextLiquids : []);
+            setMaintenances(Array.isArray(nextMaintenances) ? nextMaintenances : []);
+        } catch (err) {
+            setError(err.message || 'No se pudieron cargar los documentos.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const allResources = useMemo(() => [
+        ...documents.map((item) => normalizeResource('report', item)),
+        ...liquids.map((item) => normalizeResource('liquid', item)),
+        ...maintenances.map((item) => normalizeResource('maintenance', item)),
+    ], [documents, liquids, maintenances]);
+
+    const filteredDocuments = useMemo(() => {
+        const normalizedQuery = query.trim().toLowerCase();
+
+        return allResources.filter((document) => {
+            const matchesQuery = !normalizedQuery || [document.title, document.description, document.kind, document.fileType, document.vehicleName].some((value) => String(value || '').toLowerCase().includes(normalizedQuery));
+            const matchesType = typeFilter === 'all' || document.kind === typeFilter || document.fileType === typeFilter;
+            const matchesFolder = folderFilter === 'all' || isResourceInFolder(folders, folderFilter, document);
+            return matchesQuery && matchesType && matchesFolder;
+        }).toSorted((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }, [allResources, folders, folderFilter, query, typeFilter]);
+
+    const handleFile = (file) => {
+        if (file) setSelectedFile(file);
+    };
+
+    const handleDeleteResource = async (resource) => {
+        try {
+            if (resource.kind === 'liquid') await vehicleResourcesApi.deleteLiquid(resource.id);
+            else if (resource.kind === 'maintenance') await vehicleResourcesApi.deleteMaintenance(resource.id);
+            else await vehicleResourcesApi.deleteReport(resource.id);
+            await loadData();
+        } catch (err) {
+            setError(err.message || 'No se pudo eliminar el recurso.');
+        }
+    };
+
+    const handleSaveFolder = async (payload) => {
+        try {
+            await (payload.id ? vehicleResourcesApi.updateFolder(payload) : vehicleResourcesApi.createFolder(payload));
+            setFolderForm(null);
+            await loadData();
+        } catch (err) {
+            setError(err.message || 'No se pudo guardar la carpeta.');
+        }
+    };
+
+    const handleDeleteFolder = async (id) => {
+        try {
+            await vehicleResourcesApi.deleteFolder(id);
+            await loadData();
+        } catch (err) {
+            setError(err.message || 'No se pudo eliminar la carpeta.');
+        }
+    };
+
+    const handleUploadDocument = async (payload) => {
+        try {
+            const uploaded = await uploadFile(selectedFile, 'documents');
+            const saved = await vehicleResourcesApi.createReport({
+                nombre: payload.nombre,
+                ruta_doc: uploaded.url,
+                costo: Number(payload.costo || 0),
+                fecha_informe: payload.fecha_informe || null,
+                vehiculo: { id: Number(payload.vehiculoId) },
+            });
+            const allReports = await vehicleResourcesApi.listAllReports();
+            const created = typeof saved === 'object' ? saved : (Array.isArray(allReports) ? allReports.find((item) => item.ruta_doc === uploaded.url || item.nombre === payload.nombre) : null);
+            if (payload.carpetaId && created?.id) {
+                await vehicleResourcesApi.linkReportToFolder(payload.carpetaId, created.id);
+            }
+            setSelectedFile(null);
+            await loadData();
+        } catch (err) {
+            setError(err.message || 'No se pudo subir el documento.');
+        }
+    };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
-            <Sidebar 
-                lang={lang}
-                router={router}
-                activePage="documents"
-                t={t}
-                userProfile={userProfile}
-            />
-
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <MobileHeader 
-                    onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
-                    isMenuOpen={isMenuOpen}
-                />
-
-                <main className="flex-1 overflow-y-auto scroll-smooth no-scrollbar">
-                    <div className="max-w-6xl mx-auto p-4 lg:p-8 space-y-6 lg:space-y-8">
-                        
-                        {/* Título y Header de Página */}
-                        <div className="flex flex-wrap items-end justify-between gap-4">
-                            <div className="flex flex-col gap-2">
-                                <h2 className="text-slate-900 dark:text-white text-2xl lg:text-3xl font-black tracking-tight">{t('dashboard.docs_vault.title')}</h2>
-                                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                                    <span className="material-symbols-outlined text-sm">folder_shared</span>
-                                    <p className="text-xs lg:text-sm font-medium">
-                                        {t('dashboard.docs_vault.subtitle')} <span className="text-slate-900 dark:text-white font-bold">Tesla Model 3</span>
-                                    </p>
-                                </div>
-                            </div>
-                            <button className="hidden lg:flex bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white hover:bg-slate-50 font-bold py-2.5 px-5 rounded-lg text-sm items-center gap-2 shadow-sm transition-all">
+        <DashboardShell dict={dict} lang={lang} activePage="documents" contentClassName="max-w-7xl mx-auto p-4 lg:p-8">
+            {({ t }) => (
+                <div className="space-y-6">
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <h2 className="text-slate-900 dark:text-white text-3xl font-black tracking-tight">{t('dashboard.docs_vault.title', 'Documentos')}</h2>
+                            <p className="text-sm text-slate-500 mt-1">Todos los documentos asociados a tus vehiculos.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setResourceFolderForm(true)} className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 text-sm font-bold flex items-center gap-2">
+                                <span className="material-symbols-outlined text-sm">drive_file_move</span>
+                                Vincular recurso
+                            </button>
+                            <button onClick={() => setFolderForm({})} className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 text-sm font-bold flex items-center gap-2">
                                 <span className="material-symbols-outlined text-sm">create_new_folder</span>
-                                {t('dashboard.docs_vault.new_folder')}
+                                {t('dashboard.docs_vault.new_folder', 'Nueva carpeta')}
                             </button>
                         </div>
+                    </div>
 
-                        {/* Dropzone Responsivo */}
-                        <div className="group border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 lg:p-10 bg-white/50 dark:bg-slate-900/50 flex flex-col items-center justify-center gap-4 transition-all hover:border-primary/50 hover:bg-primary/5 cursor-pointer">
-                            <div className="size-12 lg:size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                <span className="material-symbols-outlined text-2xl lg:text-3xl font-bold">cloud_upload</span>
-                            </div>
-                            <div className="text-center">
-                                <h3 className="text-slate-900 dark:text-white font-bold text-sm lg:text-lg">{t('dashboard.docs_vault.dropzone_title')}</h3>
-                                <p className="text-slate-500 text-[10px] lg:text-sm mt-1">{t('dashboard.docs_vault.dropzone_subtitle')}</p>
-                            </div>
+                    {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-600">{error}</div>}
+
+                    <label
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={(event) => {
+                            event.preventDefault();
+                            handleFile(event.dataTransfer.files?.[0]);
+                        }}
+                        className="group border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 bg-white/60 dark:bg-slate-900/60 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary hover:bg-primary/5"
+                    >
+                        <span className="material-symbols-outlined text-4xl text-primary">cloud_upload</span>
+                        <span className="font-black">{t('dashboard.docs_vault.dropzone_title', 'Arrastra y suelta documentos aqui')}</span>
+                        <span className="text-xs text-slate-500">{t('dashboard.docs_vault.dropzone_subtitle', 'O haz clic para buscar PDF o imagenes')}</span>
+                        <input type="file" accept="image/*,.pdf,application/pdf" className="hidden" onChange={(event) => handleFile(event.target.files?.[0])} />
+                    </label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {folders.map((folder) => (
+                            <FolderCard key={folder.id} folder={folder} active={Number(folderFilter) === Number(folder.id)} onSelect={() => setFolderFilter(String(folder.id))} onEdit={() => setFolderForm(folder)} onDelete={() => handleDeleteFolder(folder.id)} />
+                        ))}
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-[1fr_220px_180px] gap-3">
+                            <label className="flex items-center bg-slate-100 dark:bg-slate-800 px-4 rounded-lg focus-within:ring-2 ring-primary/20">
+                                <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
+                                <input className="bg-transparent border-none outline-none text-sm w-full py-2.5" placeholder="Buscar por nombre o tipo..." value={query} onChange={(event) => setQuery(event.target.value)} />
+                            </label>
+                            <select className="rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm font-bold" value={folderFilter} onChange={(event) => setFolderFilter(event.target.value)}>
+                                <option value="all">Todas las carpetas</option>
+                                {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.nombre}</option>)}
+                            </select>
+                            <select className="rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm font-bold" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+                                <option value="all">Todos los tipos</option>
+                                <option value="report">Documentos</option>
+                                <option value="itv">ITV</option>
+                                <option value="liquid">Liquidos</option>
+                                <option value="maintenance">Mantenimientos</option>
+                                <option value="documento">Documento</option>
+                                <option value="pdf">PDF</option>
+                                <option value="imagen">Imagen</option>
+                            </select>
                         </div>
 
-                        {/* Categorías (Grid en PC, Select en Móvil) */}
-                        <div className="lg:hidden flex flex-col gap-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Select Category</label>
-                            <div className="relative">
-                                <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-4 text-sm font-medium appearance-none focus:ring-2 focus:ring-primary/20">
-                                    <option>Service Receipts (12)</option>
-                                    <option>Insurance (4)</option>
-                                </select>
-                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-                            </div>
-                        </div>
-
-                        <div className="hidden lg:grid grid-cols-4 gap-4">
-                            <CategoryCard icon="health_and_safety" title={t('dashboard.docs_vault.categories.insurance')} count="4" color="blue" />
-                            <CategoryCard icon="assignment" title={t('dashboard.docs_vault.categories.registration')} count="2" color="emerald" />
-                            <CategoryCard icon="receipt_long" title={t('dashboard.docs_vault.categories.service')} count="12" active />
-                            <CategoryCard icon="verified" title={t('dashboard.docs_vault.categories.warranty')} count="3" color="amber" />
-                        </div>
-
-                        {/* Tabla de Documentos Detallada */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden mb-20 lg:mb-0">
-                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                                <div className="flex flex-1 min-w-[250px]">
-                                    <label className="flex items-center w-full bg-slate-100 dark:bg-slate-800 px-4 rounded-lg focus-within:ring-2 ring-primary/20 transition-all">
-                                        <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
-                                        <input className="bg-transparent border-none focus:ring-0 text-sm w-full py-2.5" placeholder={t('dashboard.search.placeholder')} type="text" />
-                                    </label>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button className="flex lg:hidden p-2 bg-slate-100 dark:bg-slate-800 rounded-lg"><span className="material-symbols-outlined text-sm">sort</span></button>
-                                    <button className="hidden lg:flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-colors">
-                                        <span className="material-symbols-outlined text-sm">view_list</span> {t('dashboard.actions.view_mode')}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50 dark:bg-slate-800/50">
-                                        <tr>
-                                            <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500">{t('dashboard.table.name')}</th>
-                                            <th className="hidden md:table-cell px-6 py-4 text-xs font-bold uppercase text-slate-500">{t('dashboard.table.date')}</th>
-                                            <th className="hidden lg:table-cell px-6 py-4 text-xs font-bold uppercase text-slate-500">{t('dashboard.table.size')}</th>
-                                            <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 text-right">{t('dashboard.table.actions')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        <DocumentRow name="Brake_Replacement_Invoice.pdf" date="Aug 12, 2023" size="1.2 MB" type="PDF" />
-                                        <DocumentRow name="Tire_Rotation_Receipt.jpg" date="May 05, 2023" size="4.5 MB" type="IMG" />
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Widgets de Inferiores (PC) */}
-                        <div className="hidden lg:grid grid-cols-2 pb-8">
-                            <StorageWidget t={t} />
-                            <AlertsWidget t={t} />
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800/50">
+                                    <tr>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500">Documento</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500">Vehiculo</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500">Tipo</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500">Fecha</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {loading && <tr><td className="px-6 py-6 text-sm text-slate-500" colSpan="5">Cargando documentos...</td></tr>}
+                                    {!loading && filteredDocuments.map((document) => (
+                                        <DocumentRow key={`${document.kind}-${document.id}`} document={document} onView={() => setActiveDocument(document)} onDelete={() => handleDeleteResource(document)} />
+                                    ))}
+                                    {!loading && filteredDocuments.length === 0 && <tr><td className="px-6 py-6 text-sm text-slate-500" colSpan="5">No hay documentos con esos filtros.</td></tr>}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </main>
+
+                    {selectedFile && <UploadDocumentModal file={selectedFile} vehicles={vehicles} folders={folders} onClose={() => setSelectedFile(null)} onSubmit={handleUploadDocument} />}
+                    {activeDocument && <DocumentPreviewModal document={activeDocument} onClose={() => setActiveDocument(null)} />}
+                    {folderForm && <FolderFormModal folder={folderForm} onClose={() => setFolderForm(null)} onSubmit={handleSaveFolder} />}
+                    {resourceFolderForm && <ResourceFolderModal documents={documents} liquids={liquids} maintenances={maintenances} folders={folders} onClose={() => setResourceFolderForm(false)} onSubmit={async ({ folderId, type, resourceId }) => {
+                        if (type === 'report') await vehicleResourcesApi.linkReportToFolder(folderId, resourceId);
+                        else assignResourceToFolder(folderId, type, resourceId);
+                        setResourceFolderForm(false);
+                        await loadData();
+                    }} />}
+                </div>
+            )}
+        </DashboardShell>
+    );
+}
+
+function FolderCard({ folder, active, onSelect, onEdit, onDelete }) {
+    return (
+        <div className={`rounded-xl border p-4 bg-white dark:bg-slate-900 ${active ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-800'}`}>
+            <button onClick={onSelect} className="w-full text-left">
+                <div className="flex items-center justify-between gap-3">
+                    <span className="material-symbols-outlined text-primary">folder</span>
+                    <span className="text-xs font-bold text-slate-400">{(folder.informes?.length || 0) + countFolderLinks(folder.id)} recursos</span>
+                </div>
+                <h3 className="font-black mt-3">{folder.nombre}</h3>
+            </button>
+            <div className="flex gap-2 mt-4">
+                <button onClick={onEdit} className="flex-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-bold">Editar</button>
+                <button onClick={onDelete} className="flex-1 rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-600">Eliminar</button>
             </div>
-            <MobileMenuOverlay 
-                isOpen={isMenuOpen}
-                onClose={() => setIsMenuOpen(false)}
-                lang={lang}
-                router={router}
-                activePage="documents"
-                t={t}
-            />
         </div>
     );
 }
 
-/** --- SUB-COMPONENTES AUXILIARES --- **/
-
-// BottomNavItem removed - no longer used
-
-const DocumentRow = ({ name, date, size, type }) => (
-    <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-        <td className="px-6 py-4">
-            <div className="flex items-center gap-3">
-                <span className={`material-symbols-outlined ${type === 'PDF' ? 'text-red-500' : 'text-blue-500'}`}>
-                    {type === 'PDF' ? 'picture_as_pdf' : 'image'}
-                </span>
-                <div className="min-w-0">
-                    <p className="text-sm text-slate-900 dark:text-white font-medium truncate max-w-[150px] lg:max-w-none">{name}</p>
-                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Service Receipt</p>
+function DocumentRow({ document, onView, onDelete }) {
+    return (
+        <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+            <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                    <span className={`material-symbols-outlined ${document.iconClass}`}>{document.icon}</span>
+                    <div className="min-w-0">
+                        <p className="text-sm font-bold truncate max-w-[260px]">{document.title}</p>
+                        <p className="text-xs text-slate-400 truncate max-w-[260px]">{document.description}</p>
+                    </div>
                 </div>
-            </div>
-        </td>
-        <td className="hidden md:table-cell px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{date}</td>
-        <td className="hidden lg:table-cell px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{size}</td>
-        <td className="px-6 py-4 text-right">
-            <div className="flex justify-end gap-1">
-                <button className="p-2 text-slate-400 hover:text-primary transition-colors"><span className="material-symbols-outlined text-lg">visibility</span></button>
-                <button className="p-2 text-slate-400 hover:text-red-500 transition-colors"><span className="material-symbols-outlined text-lg">delete</span></button>
-            </div>
-        </td>
-    </tr>
-);
+            </td>
+            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{document.vehicleName}</td>
+            <td className="px-6 py-4 text-sm font-bold uppercase text-slate-500">{document.kindLabel}</td>
+            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{formatDate(document.date)}</td>
+            <td className="px-6 py-4 text-right">
+                <button onClick={onView} className="p-2 text-slate-400 hover:text-primary"><span className="material-symbols-outlined">visibility</span></button>
+                <button onClick={onDelete} className="p-2 text-slate-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
+            </td>
+        </tr>
+    );
+}
 
-const CategoryCard = ({ icon, title, count, active = false, color = 'primary' }) => (
-    <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm hover:border-primary/40 transition-colors cursor-pointer ${active ? 'border-primary ring-1 ring-primary/20' : ''}`}>
-        <div className="flex items-center justify-between mb-3">
-            <div className={`size-10 rounded-lg flex items-center justify-center ${active ? 'bg-primary/10 text-primary' : `bg-${color}-100 dark:bg-${color}-900/30 text-${color}-600`}`}>
-                <span className="material-symbols-outlined">{icon}</span>
+function UploadDocumentModal({ file, vehicles, folders, onClose, onSubmit }) {
+    const [form, setForm] = useState({ nombre: file.name, vehiculoId: '', carpetaId: '', costo: '', fecha_informe: new Date().toISOString().slice(0, 10) });
+    const [error, setError] = useState(null);
+
+    const submit = (event) => {
+        event.preventDefault();
+        if (!form.vehiculoId) return setError('Selecciona el vehiculo al que pertenece el documento.');
+        if (!form.nombre.trim()) return setError('Indica el titulo del documento.');
+        if (form.fecha_informe && new Date(form.fecha_informe) > new Date()) return setError('La fecha del documento no puede ser futura.');
+        onSubmit(form);
+    };
+
+    return (
+        <Modal title="Asociar documento" onClose={onClose}>
+            <form className="grid grid-cols-1 md:grid-cols-2 gap-3" onSubmit={submit}>
+                {error && <div className="md:col-span-2 rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">{error}</div>}
+                <Field label="Archivo"><div className="rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm font-bold truncate">{file.name}</div></Field>
+                <Field label="Vehiculo"><select required className={inputClass} value={form.vehiculoId} onChange={(e) => setForm({ ...form, vehiculoId: e.target.value })}><option value="">Seleccionar...</option>{vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{getVehicleName(vehicle)}</option>)}</select></Field>
+                <Field label="Titulo"><input className={inputClass} value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></Field>
+                <Field label="Coste"><input type="number" step="0.01" className={inputClass} value={form.costo} onChange={(e) => setForm({ ...form, costo: e.target.value })} /></Field>
+                <Field label="Fecha"><input type="date" className={inputClass} value={form.fecha_informe} onChange={(e) => setForm({ ...form, fecha_informe: e.target.value })} /></Field>
+                <Field label="Carpeta"><select className={inputClass} value={form.carpetaId} onChange={(e) => setForm({ ...form, carpetaId: e.target.value })}><option value="">Sin carpeta</option>{folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.nombre}</option>)}</select></Field>
+                <div className="md:col-span-2 flex justify-end gap-2"><button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-500">Cancelar</button><button className="rounded-lg bg-primary px-5 py-2 text-sm font-black text-white">Guardar</button></div>
+            </form>
+        </Modal>
+    );
+}
+
+function DocumentPreviewModal({ document, onClose }) {
+    return (
+        <Modal title={document.title} onClose={onClose}>
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    <Info label="Tipo" value={document.kindLabel} />
+                    <Info label="Vehiculo" value={document.vehicleName} />
+                    <Info label="Fecha" value={formatDate(document.date)} />
+                </div>
+                {document.fileUrl && document.fileType === 'pdf' && <iframe title={document.title} src={document.fileUrl} className="h-[70vh] w-full rounded-lg border border-slate-200 dark:border-slate-800" />}
+                {document.fileUrl && document.fileType !== 'pdf' && <img src={document.fileUrl} alt={document.title} className="max-h-[70vh] w-full rounded-lg object-contain bg-slate-100 dark:bg-slate-800" />}
+                {!document.fileUrl && <p className="text-sm text-slate-500">{document.description || 'Este recurso no tiene archivo asociado.'}</p>}
             </div>
-            <span className="text-xs font-bold text-slate-400">{count} Files</span>
+        </Modal>
+    );
+}
+
+function Info({ label, value }) {
+    return <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-3"><p className="text-xs font-bold uppercase text-slate-400">{label}</p><p className="font-bold">{value || 'N/A'}</p></div>;
+}
+
+function FolderFormModal({ folder, onClose, onSubmit }) {
+    const [nombre, setNombre] = useState(folder.nombre || '');
+    return (
+        <Modal title={folder.id ? 'Editar carpeta' : 'Crear carpeta'} onClose={onClose}>
+            <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); onSubmit({ id: folder.id, nombre }); }}>
+                <Field label="Nombre"><input required className={inputClass} value={nombre} onChange={(e) => setNombre(e.target.value)} /></Field>
+                <div className="flex justify-end gap-2"><button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-500">Cancelar</button><button className="rounded-lg bg-primary px-5 py-2 text-sm font-black text-white">Guardar</button></div>
+            </form>
+        </Modal>
+    );
+}
+
+function ResourceFolderModal({ documents, liquids, maintenances, folders, onClose, onSubmit }) {
+    const [form, setForm] = useState({ type: 'report', resourceId: '', folderId: '' });
+    const resources = form.type === 'report'
+        ? documents.map((item) => ({ id: item.id, label: item.nombre }))
+        : form.type === 'liquid'
+            ? liquids.map((item) => ({ id: item.id, label: `${item.nombre} - ${item.tipo || 'Liquido'}` }))
+            : maintenances.map((item) => ({ id: item.id, label: item.componente_cambiado }));
+
+    return (
+        <Modal title="Vincular recurso a carpeta" onClose={onClose}>
+            <form className="grid grid-cols-1 md:grid-cols-3 gap-3" onSubmit={(event) => { event.preventDefault(); onSubmit(form); }}>
+                <Field label="Tipo">
+                    <select className={inputClass} value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value, resourceId: '' })}>
+                        <option value="report">Documento</option>
+                        <option value="liquid">Liquido</option>
+                        <option value="maintenance">Mantenimiento</option>
+                    </select>
+                </Field>
+                <Field label="Recurso">
+                    <select required className={inputClass} value={form.resourceId} onChange={(event) => setForm({ ...form, resourceId: event.target.value })}>
+                        <option value="">Seleccionar...</option>
+                        {resources.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+                    </select>
+                </Field>
+                <Field label="Carpeta">
+                    <select required className={inputClass} value={form.folderId} onChange={(event) => setForm({ ...form, folderId: event.target.value })}>
+                        <option value="">Seleccionar...</option>
+                        {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.nombre}</option>)}
+                    </select>
+                </Field>
+                <div className="md:col-span-3 flex justify-end gap-2">
+                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-500">Cancelar</button>
+                    <button className="rounded-lg bg-primary px-5 py-2 text-sm font-black text-white">Vincular</button>
+                </div>
+            </form>
+        </Modal>
+    );
+}
+
+function Modal({ title, children, onClose }) {
+    return (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-4xl rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+                    <h2 className="text-xl font-black truncate">{title}</h2>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700"><span className="material-symbols-outlined">close</span></button>
+                </div>
+                <div className="p-5">{children}</div>
+            </div>
         </div>
-        <h4 className="text-slate-900 dark:text-white font-bold text-sm">{title}</h4>
-    </div>
-);
+    );
+}
 
-// UserProfile moved inline to component
+function Field({ label, children }) {
+    return <label className="flex flex-col gap-1 text-xs font-bold uppercase text-slate-400">{label}{children}</label>;
+}
 
-const StorageWidget = ({ t }) => (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-        <h3 className="text-slate-900 dark:text-white text-lg font-bold mb-4">Vault Storage</h3>
-        <div className="space-y-4">
-            <div className="flex justify-between mb-1">
-                <span className="text-xs font-bold text-slate-500 uppercase">Used Space</span>
-                <span className="text-xs font-bold text-slate-900 dark:text-white">420 MB / 1 GB</span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                <div className="bg-primary h-2 rounded-full" style={{ width: '42%' }}></div>
-            </div>
-        </div>
-    </div>
-);
+const inputClass = 'rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-primary';
 
-const AlertsWidget = ({ t }) => (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-        <h3 className="text-slate-900 dark:text-white text-lg font-bold mb-4">Compliance Alerts</h3>
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-amber-100 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-900/30">
-            <span className="material-symbols-outlined text-amber-500 mt-0.5">warning</span>
-            <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">Insurance Expiring</p>
-                <p className="text-xs text-slate-500 mt-1">Proof of coverage expires in 12 days.</p>
-            </div>
-        </div>
-    </div>
-);
+function getDocumentType(document) {
+    const path = String(document.fileUrl || document.ruta_doc || '').toLowerCase();
+    if (path.endsWith('.pdf')) return 'pdf';
+    if (/\.(jpg|jpeg|png|webp|gif)$/.test(path)) return 'imagen';
+    return 'documento';
+}
+
+function normalizeResource(kind, item) {
+    const attachment = getResourceAttachment(kind === 'maintenance' ? 'maintenance' : kind, item);
+    const parsedAttachment = parseAttachment(attachment);
+    const isItv = kind === 'report' && (parsedAttachment?.specialType === 'itv' || /^itv\b/i.test(item.nombre || ''));
+    const fileUrl = parsedAttachment?.dataUrl || item.ruta_doc || '';
+    const fileType = getDocumentType({ fileUrl });
+    const vehicle = item.vehiculo;
+    const base = {
+        id: item.id,
+        raw: item,
+        kind: isItv ? 'itv' : kind,
+        fileType,
+        fileUrl,
+        vehicleName: getVehicleName(vehicle),
+        vehicle,
+    };
+    if (kind === 'liquid') {
+        return { ...base, title: item.nombre, description: `${item.tipo || 'Liquido'} - ${Number(item.km_para_cambio || 0).toLocaleString()} km`, date: parsedAttachment?.fecha_cambio_actual, kindLabel: 'Liquido', icon: 'opacity', iconClass: 'text-cyan-500' };
+    }
+    if (kind === 'maintenance') {
+        return { ...base, title: item.componente_cambiado, description: item.descripcion || `${Number(item.km_cambiado || 0).toLocaleString()} km`, date: item.fecha_cambio, kindLabel: 'Mantenimiento', icon: 'build', iconClass: 'text-amber-500' };
+    }
+    return { ...base, title: item.nombre, description: item.ruta_doc || parsedAttachment?.name || '', date: item.fecha_informe, kindLabel: isItv ? 'ITV' : 'Documento', icon: isItv ? 'verified' : (fileType === 'pdf' ? 'picture_as_pdf' : 'description'), iconClass: isItv ? 'text-emerald-500' : fileType === 'pdf' ? 'text-red-500' : 'text-blue-500' };
+}
+
+function isResourceInFolder(folders, folderFilter, resource) {
+    const folder = folders.find((item) => Number(item.id) === Number(folderFilter));
+    if (!folder) return false;
+    if ((resource.kind === 'report' || resource.kind === 'itv') && folder.informes?.some((item) => Number(item.id) === Number(resource.id))) return true;
+    return getFolderLinks(folder.id).some((link) => link.type === resource.kind && Number(link.resourceId) === Number(resource.id));
+}
+
+function parseAttachment(value) {
+    if (!value) return null;
+    if (typeof value === 'object') return value;
+    try {
+        return JSON.parse(value);
+    } catch {
+        return null;
+    }
+}
+
+function getVehicleName(vehicle) {
+    if (!vehicle) return 'N/A';
+    const brand = vehicle.marca?.nombre || vehicle.marca || '';
+    return `${brand} ${vehicle.modelo || ''}`.trim() || vehicle.matricula || 'Vehiculo';
+}
+
+function formatDate(date) {
+    if (!date) return 'N/A';
+    const parsed = new Date(date);
+    return Number.isNaN(parsed.getTime()) ? 'N/A' : parsed.toLocaleDateString('es-ES');
+}
